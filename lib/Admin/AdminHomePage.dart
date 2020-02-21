@@ -1,9 +1,11 @@
-import 'package:chap/Admin/DisasterImages.dart';
 import 'package:chap/Admin/UploadAdvice.dart';
+import 'package:chap/Admin/UploadContacts.dart';
 import 'package:chap/Admin/reported.dart';
 import 'package:chap/Table.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+
+import 'ReportedDisastersPage.dart';
 
 class AdminHomePage extends StatefulWidget {
   @override
@@ -13,9 +15,10 @@ class AdminHomePage extends StatefulWidget {
 class _AdminHomePageState extends State<AdminHomePage> {
   int _currentIndex = 0;
   final List<Widget> _children = [
-    ReportedDisasters(),
+    Reported(),
+    // ReportedDisasters(),
     UploadAdvicePge(),
-    DataTableDemo(),
+    UploadContacts(),
     
   ];
   void onTappedBar(int index) {
@@ -88,7 +91,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             size: 20,
           ),
           Icon(
-            Icons.list,
+            Icons.contacts,
             color: Colors.black,
             size: 20,
           ),

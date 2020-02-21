@@ -1,5 +1,5 @@
 import 'package:chap/HomePage.dart';
-import 'package:chap/TabFiles/Contacts.dart';
+import 'package:chap/TabFiles/Advice.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,8 +23,8 @@ class _MainControllerPageState extends State<MainControllerPage> {
   int _currentIndex = 0;
   final List<Widget> _children = [
     HomePage(),
-    AboutPage(),
-    ContactsPage(),
+    AdvicePage(),
+    AboutPage()
   ];
   void onTappedBar(int index) {
     setState(() {
@@ -46,7 +46,12 @@ class _MainControllerPageState extends State<MainControllerPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('You are about to log out'),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+              Icon(Icons.warning),
+              Text('logging out!')
+            ],),
             actions: <Widget>[
               MaterialButton(
                 elevation: 5.0,

@@ -71,10 +71,11 @@ class _LaunchPageState extends State<LaunchPage> {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => LoginPage()));
+                            Navigator.push(context, CupertinoPageRoute(builder: (context)=>LoginPage()));
+                            // Navigator.push(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //         builder: (context) => LoginPage()));
                           },
                           child: Center(
                             child: Text(

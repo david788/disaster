@@ -10,6 +10,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import 'googlemapPage.dart';
+
 class DisasterSpecificationPage extends StatefulWidget {
   @override
   _DisasterSpecificationPageState createState() =>
@@ -29,7 +31,7 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
   _openGallery(BuildContext context) async {
     var picture = await ImagePicker.pickImage(source: ImageSource.gallery);
     setState(() {
-       imageFile = picture;
+      imageFile = picture;
     });
     print('image path$imageFile');
     // this.setState({}[imageFile = picture]);
@@ -41,7 +43,7 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
     // this.setState({}[imageFile = picture]);
 
     setState(() {
-     return imageFile = picture;
+      return imageFile = picture;
     });
     print('image path$imageFile');
     Navigator.of(context).pop();
@@ -122,7 +124,7 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
         url = imageUrl.toString();
         saveToDatabase(url);
         toggleLoading();
-         SnackBar snackBar = SnackBar(
+        SnackBar snackBar = SnackBar(
           content: Text(
             "Reported successfully",
             textAlign: TextAlign.center,
@@ -132,22 +134,20 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
         Scaffold.of(context).showSnackBar(snackBar);
         Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => MainControllerPage()));
-       
       } catch (e) {
         print(e.toString());
         Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => MainControllerPage()));
       }
-    }else{
+    } else {
       Fluttertoast.showToast(
-        msg: "Please fill all the details required",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIos: 1,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 16.0
-    );
+          msg: "Please fill all the details required",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIos: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
     }
   }
 
@@ -198,13 +198,19 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                     children: <Widget>[
                       Padding(
                         padding: const EdgeInsets.only(right: 16, top: 16),
-                        child: TextFormField(
+                       child: Container(
+                         child: Column(
+                           mainAxisAlignment: MainAxisAlignment.center,
+                           children: <Widget>[
+                               TextFormField(
+                                 maxLines: 2,
+                                 keyboardType: TextInputType.multiline,
                           controller: incidencefield,
                           decoration: InputDecoration(
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(5)),
                               labelText: "Describe the incidence",
-                              helperText: "What happened"),
+                              helperText: "What happened..?"),
                           validator: (value) {
                             if (value.isEmpty) {
                               return "Description required";
@@ -215,6 +221,9 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                             return _mydescription = value;
                           },
                         ),
+                           ],
+                         ),
+                       ),
                       ),
                       SizedBox(
                         height: 10,
@@ -303,6 +312,10 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                                   TextStyle(color: Colors.white, fontSize: 20),
                             ),
                             onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => GoogleMapPage()));
                               // _launchUrl("https://www.google.com/maps/@-0.6988916,37.1001645,12902m/data=!3m1!1e3");
                             },
                           ),

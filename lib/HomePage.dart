@@ -1,6 +1,7 @@
 import 'package:chap/DisasterPage.dart';
 import 'package:chap/TabFiles/Advice.dart';
 import 'package:chap/TabFiles/Contacts.dart';
+import 'package:chap/TabFiles/ContactsPage.dart';
 import 'package:chap/TabFiles/DisasterSpecificationPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -63,12 +64,8 @@ class _HomePageState extends State<HomePage>
                   style: TextStyle(fontSize: 21),
                 ),
               ),
-              Tab(
-                child: Text(
-                  'Advice',
-                  style: TextStyle(fontSize: 21),
-                ),
-              ),
+               
+             
             ],
           ),
           Container(
@@ -79,8 +76,7 @@ class _HomePageState extends State<HomePage>
               children: <Widget>[
                 DisasterPage(),
                 DisasterSpecificationPage(),
-                ContactsPage(),
-                AdvicePage(),
+                Contacts(),
               ],
             ),
           ),
@@ -95,12 +91,3 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-// Fluttertoast.showToast(
-//         msg: "This is Center Short Toast",
-//         toastLength: Toast.LENGTH_SHORT,
-//         gravity: ToastGravity.CENTER,
-//         timeInSecForIos: 1,
-//         backgroundColor: Colors.red,
-//         textColor: Colors.white,
-//         fontSize: 16.0
-//     );

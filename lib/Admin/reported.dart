@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Reported extends StatefulWidget {
@@ -7,6 +8,33 @@ class Reported extends StatefulWidget {
 }
 
 class _ReportedState extends State<Reported> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: StreamBuilder(
+      stream: Firestore.instance.collection('disasters').snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (!snapshot.hasData)
+          return Center(
+              child: CupertinoActivityIndicator(
+            radius: 20,
+          ));
+
+        return FirestoreListView(documents: snapshot.data.documents);
+      },
+    ));
+  }
+}
+
+class FirestoreListView extends StatefulWidget {
+  final List<DocumentSnapshot> documents;
+  FirestoreListView({this.documents});
+
+  @override
+  _FirestoreListViewState createState() => _FirestoreListViewState();
+}
+
+class _FirestoreListViewState extends State<FirestoreListView> {
   List<Disasters> disastersList = [];
   List<Disasters> selectedDisaster;
 
@@ -22,50 +50,40 @@ class _ReportedState extends State<Reported> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: StreamBuilder(
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            const Text('Loading disasters');
-          } else {
-            return ListView.builder(
-                itemCount: snapshot.data.documents.length,
-                itemBuilder: (context, index) {
-                  DocumentSnapshot disasters = snapshot.data.documents[index];
-                  return DataTable(
-                    columns: [
-                      DataColumn(label: Text("TIME"), numeric: false),
-                      DataColumn(label: Text("DATE"), numeric: false),
-                      DataColumn(label: Text("DISASTER"), numeric: false),
-                      DataColumn(label: Text("LOCATION"), numeric: false),
-                    ],
-                    rows: disastersList
-                        .map((disaster) => DataRow(
-                                selected: selectedDisaster.contains(disaster),
-                                onSelectChanged: (b) {
-                                  print("Onselect");
-                                  onSelectedRow(b, disaster);
-                                },
-                                cells: [
-                                  DataCell(Text('${disasters["time"]}')),
-                                  DataCell(Text('${disasters["date"]}')),
-                                  DataCell(Text('${disasters["disaster"]}')),
-                                  DataCell(Text('${disasters["location"]}')),
-                                ]))
-                        .toList(),
-                  );
-                });
-          }
-        },
-        stream: Firestore.instance.collection('Disasters').snapshots(),
-      ),
+    return ListView.builder(
+      itemCount: widget.documents.length,
+      itemBuilder: (BuildContext context, int index) {
+        String time = widget.documents[index].data['time'].toString();
+        String date = widget.documents[index].data['date'].toString();
+        String incidence = widget.documents[index].data['incidence'].toString();
+        String description =
+            widget.documents[index].data['decription'].toString();
+
+       
+
+        return DataTable(
+            columns: [
+              DataColumn(label: Text("TIME"), numeric: false),
+              DataColumn(label: Text("DATE"), numeric: false),
+              DataColumn(label: Text("INCIDENCE"), numeric: false),
+              DataColumn(label: Text("DESCRIPTION"), numeric: false),
+            ],
+            rows: disastersList.map((disasters) => DataRow(cells: [
+                  DataCell(Text(disasters.time)),
+                  DataCell(Text(disasters.date)),
+                  DataCell(Text(disasters.incidence)),
+                  DataCell(Text(disasters.description)),
+                ]))
+                );
+      },
     );
   }
 }
 
 class Disasters {
-  String date, time, image, description, location;
-  Disasters(this.date, this.time, this.image, this.description, this.location);
+  String date, time, image, description, location, incidence;
+  Disasters(this.date, this.time, this.image, this.description, this.location,
+      this.incidence);
   // List<Disasters> getDisasters() {
   //   return [Disasters(date, time, image, description, location)];
   // }

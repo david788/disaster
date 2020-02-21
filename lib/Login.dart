@@ -3,6 +3,7 @@ import 'package:chap/RegisterPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'Authentication.dart';
 // import 'package:fluttertoast/fluttertoast.dart';
@@ -39,13 +40,17 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => MainControllerPage()));
 
       toggleLoading();
-      
     } catch (e) {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => LoginPage()));
 
       print(e.toString());
-    }widget.onSignedIn();
+      Fluttertoast.showToast(msg: '$e',
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.blueAccent,);
+    }
+    widget.onSignedIn();
   }
 
   void _validateForm() {
@@ -155,44 +160,48 @@ class _LoginPageState extends State<LoginPage> {
                                     height: 30,
                                   ),
                                   Text("Email", style: TextStyle(fontSize: 22)),
-                                  TextFormField(
-                                    controller: email,
-                                    decoration: InputDecoration(
-                                      hintText: "Enter Email",
-                                    ),
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return "please enter email";
-                                      } else {
-                                        return null;
-                                      }
-                                    },
-                                    onSaved: (value) {
-                                      return _myemail = value;
-                                    },
-                                  ),
+                                   TextFormField(
+                                        controller: email,
+                                        // keyboardType:
+                                        //     TextInputType.emailAddress,
+                                        decoration: InputDecoration(
+                                          hintText: "Enter Email",
+                                        ),
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "please enter email";
+                                          } else {
+                                            return null;
+                                          }
+                                        },
+                                        onSaved: (value) {
+                                          return _myemail = value;
+                                        },
+                                      ),
+                                  
                                   SizedBox(
                                     height: 30,
                                   ),
                                   Text("Password",
                                       style: TextStyle(fontSize: 22)),
-                                  TextFormField(
-                                    controller: password,
-                                    obscureText: true,
-                                    decoration: InputDecoration(
-                                      hintText: "Enter Password",
-                                    ),
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return "please enter password";
-                                      } else {
-                                        return null;
-                                      }
-                                    },
-                                    onSaved: (value) {
-                                      return _mypassword = value;
-                                    },
-                                  ),
+                                       TextFormField(
+                                        controller: password,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          hintText: "Enter Password",
+                                        ),
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "please enter password";
+                                          } else {
+                                            return null;
+                                          }
+                                        },
+                                        onSaved: (value) {
+                                          return _mypassword = value;
+                                        },
+                                      ),
+                                 
                                   SizedBox(
                                     height: 35,
                                   ),

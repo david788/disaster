@@ -119,64 +119,71 @@ class _RegisterPageState extends State<RegisterPage> {
                                     height: 20,
                                   ),
                                   Text("Email", style: TextStyle(fontSize: 20)),
-                                  TextFormField(
-                                    controller: email,
-                                    decoration: InputDecoration(
-                                      hintText: "Enter Email",
-                                    ),
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return "please enter email";
-                                      } else {
-                                        return null;
-                                      }
-                                    },
-                                    onSaved: (value) {
-                                      return _myemail = value;
-                                    },
-                                  ),
+                                   TextFormField(
+                                        controller: email,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        decoration: InputDecoration(
+                                          hintText: "Enter Email",
+                                        ),
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "please enter email";
+                                          } else {
+                                            return null;
+                                          }
+                                        },
+                                        onSaved: (value) {
+                                          return _myemail = value;
+                                        },
+                                      ),
+                                  
                                   SizedBox(
                                     height: 20,
                                   ),
                                   Text("Password",
                                       style: TextStyle(fontSize: 20)),
-                                  TextFormField(
-                                    controller: firstpassword,
-                                    decoration: InputDecoration(
-                                      hintText: "Enter Password",
-                                    ),
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return "please enter password";
-                                      } else {
-                                        return null;
-                                      }
-                                    },
-                                    onSaved: (value) {
-                                      return _myemail = value;
-                                    },
-                                  ),
+                                       TextFormField(
+                                        obscureText: true,
+                                        controller: firstpassword,
+                                        decoration: InputDecoration(
+                                          hintText: "Enter Password",
+                                        ),
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "please enter password";
+                                          } else {
+                                            return null;
+                                          }
+                                        },
+                                        onSaved: (value) {
+                                          return _myemail = value;
+                                        },
+                                      ),
+                                 
                                   Text("Password",
                                       style: TextStyle(fontSize: 20)),
                                   SizedBox(
                                     height: 20,
                                   ),
                                   TextFormField(
-                                    controller: password,
-                                    decoration: InputDecoration(
-                                      hintText: "Enter Password",
-                                    ),
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return "confirm password";
-                                      } else {
-                                        return null;
-                                      }
-                                    },
-                                    onSaved: (value) {
-                                      return _myemail = value;
-                                    },
-                                  ),
+                                        obscureText: true,
+                                        controller: password,
+                                        decoration: InputDecoration(
+                                          hintText: "Enter Password",
+                                        ),
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "confirm password";
+                                          } else {
+                                            return null;
+                                          }
+                                        },
+                                        onSaved: (value) {
+                                          return _myemail = value;
+                                        },
+                                         ),
+                                 
                                   SizedBox(
                                     height: 25,
                                   ),
@@ -192,11 +199,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                           ),
                                         ),
                                         onPressed: () {
-                                       setState(() {
-                                         email.text="";
-                                         firstpassword.text="";
-                                         password.text="";
-                                       });
+                                          setState(() {
+                                            email.text = "";
+                                            firstpassword.text = "";
+                                            password.text = "";
+                                          });
                                         },
                                       ),
                                     ],
