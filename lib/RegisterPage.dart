@@ -129,7 +129,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                         validator: (value) {
                                           if (value.isEmpty) {
                                             return "please enter email";
-                                          } else {
+                                          } 
+                                           if (!value.contains('@')){
+                                            return "email is badly formated";
+                                          }else {
                                             return null;
                                           }
                                         },

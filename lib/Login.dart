@@ -170,6 +170,9 @@ class _LoginPageState extends State<LoginPage> {
                                         validator: (value) {
                                           if (value.isEmpty) {
                                             return "please enter email";
+                                          }
+                                            if (!value.contains('@')){
+                                            return "email is badly formated";
                                           } else {
                                             return null;
                                           }
@@ -193,9 +196,16 @@ class _LoginPageState extends State<LoginPage> {
                                         validator: (value) {
                                           if (value.isEmpty) {
                                             return "please enter password";
-                                          } else {
+                                          }
+                                        
+                                          else {
                                             return null;
                                           }
+                                          // switch(value){
+                                          //   case value.isEmpty:
+                                          //   return "";
+
+                                          // }
                                         },
                                         onSaved: (value) {
                                           return _mypassword = value;

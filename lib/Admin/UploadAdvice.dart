@@ -71,7 +71,7 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
                    mainAxisAlignment: MainAxisAlignment.center,
                    children: <Widget>[
                       TextFormField(
-                        maxLines: 10,
+                        maxLines: 6,
                   controller: advicecontroller,
                   keyboardType: TextInputType.multiline,
 
@@ -91,7 +91,7 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
                   },
                   decoration: InputDecoration(
                     
-                      labelText: "content",
+                      labelText: "Enter the content here",
                       helperText: "e.g., Step 1: do this..."),
                 ),
                    ],

@@ -1,10 +1,12 @@
 import 'package:chap/Admin/UploadAdvice.dart';
 import 'package:chap/Admin/UploadContacts.dart';
+import 'package:chap/Admin/fcm.dart';
 import 'package:chap/Admin/reported.dart';
 import 'package:chap/Table.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 
+import 'Messages.dart';
 import 'ReportedDisastersPage.dart';
 
 class AdminHomePage extends StatefulWidget {
@@ -15,8 +17,10 @@ class AdminHomePage extends StatefulWidget {
 class _AdminHomePageState extends State<AdminHomePage> {
   int _currentIndex = 0;
   final List<Widget> _children = [
-    Reported(),
-    // ReportedDisasters(),
+    // Reported(),
+    // MessagesPage(),
+    MessageHandler(),
+    ReportedDisasters(),
     UploadAdvicePge(),
     UploadContacts(),
     
@@ -80,6 +84,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
         buttonBackgroundColor: Colors.white,
         height: 50,
         items: <Widget>[
+          Icon(
+            Icons.message,
+            color: Colors.black,
+            size: 20,
+          ),
           Icon(
             Icons.home,
             color: Colors.black,

@@ -35,6 +35,7 @@ class _FireMapState extends State<FireMap> {
     return Stack(
       children: <Widget>[
         GoogleMap(
+          
           initialCameraPosition:
               // CameraPosition(target: LatLng(24.142, -110.321), zoom: 15),
               CameraPosition(target: LatLng(37.147424, -0.714098), zoom: 15),

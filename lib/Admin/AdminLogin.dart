@@ -134,7 +134,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                         validator: (value) {
                                           if (value.isEmpty) {
                                             return "please enter email";
-                                          } else {
+                                          } 
+                                           if (!value.contains('@')){
+                                            return "email is badly formated";
+                                          }else {
                                             return null;
                                           }
                                         },

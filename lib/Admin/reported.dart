@@ -53,11 +53,13 @@ class _FirestoreListViewState extends State<FirestoreListView> {
     return ListView.builder(
       itemCount: widget.documents.length,
       itemBuilder: (BuildContext context, int index) {
-        String time = widget.documents[index].data['time'].toString();
+       
+         String time = widget.documents[index].data['time'].toString();
         String date = widget.documents[index].data['date'].toString();
         String incidence = widget.documents[index].data['incidence'].toString();
         String description =
-            widget.documents[index].data['decription'].toString();
+            widget.documents[index].data['description'].toString();
+                    String location = widget.documents[index].data['position'].toString();
 
        
 
@@ -68,19 +70,82 @@ class _FirestoreListViewState extends State<FirestoreListView> {
               DataColumn(label: Text("INCIDENCE"), numeric: false),
               DataColumn(label: Text("DESCRIPTION"), numeric: false),
             ],
-            rows: disastersList.map((disasters) => DataRow(cells: [
-                  DataCell(Text(disasters.time)),
-                  DataCell(Text(disasters.date)),
-                  DataCell(Text(disasters.incidence)),
-                  DataCell(Text(disasters.description)),
-                ]))
+            // rows: disastersList.map((disasters) => DataRow(cells: [
+            //       DataCell(Text(disasters.time)),
+            //       DataCell(Text(disasters.date)),
+            //       DataCell(Text(disasters.incidence)),
+            //       DataCell(Text(disasters.description)),
+            //     ])),
+            rows: [DataRow(cells: [
+                DataCell(Text(time)),
+                DataCell(Text(date)),
+                DataCell(Text(incidence)),
+                DataCell(Text(description)),
+              ])] 
+             
+            
                 );
+        // return Container(
+        //   child: Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: Card(
+        //       elevation: 5,
+        //       child: Column(
+        //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+        //         children: <Widget>[
+        //           Padding(
+        //             padding: const EdgeInsets.all(8.0),
+        //             child: Row(
+        //               // crossAxisAlignment: CrossAxisAlignment.center,
+        //               children: <Widget>[
+        //                 Text('TIME:'),
+        //                 Text(time),
+        //             ],),
+        //           ),
+        //            Padding(
+        //              padding: const EdgeInsets.all(8.0),
+        //              child: Row(
+        //               children: <Widget>[
+        //                 Text('DATE:'),
+        //                 Text(date),
+        //           ],),
+        //            ),
+        //            Padding(
+        //              padding: const EdgeInsets.all(8.0),
+        //              child: Row(
+        //               children: <Widget>[
+        //                 Text('INCIDENCE:'),
+        //                 Text(incidence),
+        //           ],),
+        //            ),
+        //            Padding(
+        //              padding: const EdgeInsets.all(8.0),
+        //              child: Row(
+        //               children: <Widget>[
+        //                 Text('DESCRIPTION:'),
+        //                 Text(description),
+        //           ],),
+        //            ),
+        //            Padding(
+        //              padding: const EdgeInsets.all(8.0),
+        //              child: Row(
+        //               children: <Widget>[
+        //                 Text('LOCATION:'),
+        //                 Expanded(child: Text(location)),
+        //           ],),
+        //            )
+        //         ],
+        //       ),
+        //     ),
+        //   ),
+        // );
       },
     );
   }
 }
 
 class Disasters {
+  
   String date, time, image, description, location, incidence;
   Disasters(this.date, this.time, this.image, this.description, this.location,
       this.incidence);

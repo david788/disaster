@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 
 class DisasterDetail extends StatefulWidget {
   final assetPath, disasterName;
@@ -34,10 +36,58 @@ class _DisasterDetailState extends State<DisasterDetail> {
 
   final formKey = GlobalKey<FormState>();
   var description = TextEditingController();
+  Location location = Location();
+  Firestore firestore = Firestore.instance;
+  Geoflutterfire geo = Geoflutterfire();
 
-  void uploadToFirestore() async {
+  Future<DocumentReference> _addGeoPoint() async {
     try {
       toggleLoading();
+
+      var pos = await location.getLocation();
+      var dbTimeKey = DateTime.now();
+      var formatDate = DateFormat('MMM d, yyyy');
+      var formatTime = DateFormat('EEEE, hh:mm aaa');
+
+      String date = formatDate.format(dbTimeKey);
+      String time = formatTime.format(dbTimeKey);
+
+      GeoFirePoint point =
+          geo.point(latitude: pos.latitude, longitude: pos.longitude);
+      return firestore.collection('disasters').add({
+        "time": time,
+        "date": date,
+        "incidence": widget.disasterName,
+        "description": _description,
+        'position': point.data,
+      }).whenComplete(() {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => MainControllerPage()));
+
+        Fluttertoast.showToast(
+            msg:
+                'Reported successfully. The disaster agents are being notified. Thankyou',
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.blue,
+            textColor: Colors.white,
+            toastLength: Toast.LENGTH_LONG);
+        toggleLoading();
+      });
+    } catch (e) {
+      toggleLoading();
+      Fluttertoast.showToast(
+          msg: '$e'.toString(),
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.blue,
+          textColor: Colors.white,
+          toastLength: Toast.LENGTH_LONG);
+    }
+  }
+
+  void uploadToFirestore() async {
+    toggleLoading();
+    var pos = await Location().getLocation();
+    try {
       var dbTimeKey = DateTime.now();
       var formatDate = DateFormat('MMM d, yyyy');
       var formatTime = DateFormat('EEEE, hh:mm aaa');
@@ -51,9 +101,13 @@ class _DisasterDetailState extends State<DisasterDetail> {
         "incidence": widget.disasterName,
         "time": time,
         "date": date,
+        "position": {
+          "geohash": pos.hashCode.toString(),
+          "latitude": pos.latitude.toString(),
+          "longitude": pos.longitude.toString()
+        }
       };
       documentReference.setData(disasters).whenComplete(() {
-        toggleLoading();
         Navigator.push(context,
             MaterialPageRoute(builder: (context) => MainControllerPage()));
 
@@ -64,8 +118,10 @@ class _DisasterDetailState extends State<DisasterDetail> {
             backgroundColor: Colors.blue,
             textColor: Colors.white,
             toastLength: Toast.LENGTH_LONG);
+        toggleLoading();
       });
     } catch (e) {
+      toggleLoading();
       Fluttertoast.showToast(
           msg: '$e'.toString(),
           gravity: ToastGravity.BOTTOM,
@@ -95,7 +151,7 @@ class _DisasterDetailState extends State<DisasterDetail> {
                   style: TextStyle(color: Colors.blue, fontSize: 18),
                 ),
                 onPressed: () {
-                  uploadToFirestore();
+                  _addGeoPoint();
                   Navigator.of(context).pop();
                   setState(() {
                     description.text = '';
@@ -186,8 +242,7 @@ class _DisasterDetailState extends State<DisasterDetail> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) =>
-                                          GoogleMapPage()));
+                                      builder: (context) => GoogleMapPage()));
                             },
                           ),
                         ],
@@ -198,30 +253,39 @@ class _DisasterDetailState extends State<DisasterDetail> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Form(
-                          key: formKey,
-                          child: TextFormField(
-                            keyboardType: TextInputType.multiline,
-                            controller: description,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                labelText: "Description",
-                                hintText: "PLease give a small description"),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'please give a brief description of the incident';
-                              } else
-                                return null;
-                            },
-                            onSaved: (value) {
-                              return _description = value;
-                            },
-                            onChanged: (String _description) {
-                              getDescription(_description);
-                            },
-                          ),
-                        ),
+                            key: formKey,
+                            child: Container(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  TextFormField(
+                                    keyboardType: TextInputType.multiline,
+                                    maxLines: 2,
+                                    controller: description,
+                                    decoration: InputDecoration(
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        labelText: "Description",
+                                        hintText:
+                                            "PLease give a small description"),
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return 'please give a brief description of the incident';
+                                      } else
+                                        return null;
+                                    },
+                                    onSaved: (value) {
+                                      return _description = value;
+                                    },
+                                    onChanged: (String _description) {
+                                      getDescription(_description);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )),
                       ),
                       SizedBox(
                         height: 20,
