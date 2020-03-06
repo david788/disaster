@@ -1,3 +1,4 @@
+import 'package:chap/TabFiles/DisasterSpecificationPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'DisasterDetails.dart';
@@ -11,41 +12,56 @@ class _DisasterPageState extends State<DisasterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       backgroundColor: Color(0xFFFCFAF8),
-      body: ListView(
-        children: <Widget>[
-          SizedBox(
-            height: 15,
+      body: Builder(builder: (context) {
+        return Container(
+          child: ListView(
+            padding: EdgeInsets.only(left: 20),
+            children: <Widget>[
+              SizedBox(
+                height: 15,
+              ),
+              Container(
+                padding: EdgeInsets.only(right: 15),
+                width: MediaQuery.of(context).size.width - 30,
+                // height: MediaQuery.of(context).size.height -50,
+                height: 800,
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  primary: false,
+                  crossAxisSpacing: 5,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.8,
+                  children: <Widget>[
+                    _buildCard(
+                        'Road Accident', "images/accident.png", true, context),
+                    _buildCard('Need Ambulance', "images/ambulance.png", true,
+                        context),
+                    _buildCard(
+                        'Drowning', "images/drowning.png", true, context),
+                    _buildCard(
+                        'Fire Outbreak', "images/fire.png", true, context),
+                    _buildCard('Collapsing Building', "images/collapse.png",
+                        true, context),
+                    _buildCard(
+                        'Land SLide', "images/landslide.png", true, context),
+                  ],
+                ),
+              ),
+              
+              Padding(
+                padding: const EdgeInsets.only(right:16, left:8),
+                child: FlatButton(onPressed: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>DisasterSpecificationPage()));
+                },
+                color: Colors.blue,
+                 child: Text("any other type of incidence..? click here", style: TextStyle(color: Colors.white),)),
+              ),
+              SizedBox(height:20),
+            ],
           ),
-          Container(
-            padding: EdgeInsets.only(right: 15),
-            width: MediaQuery.of(context).size.width - 30,
-            height: MediaQuery.of(context).size.height - 50,
-            child: GridView.count(
-              crossAxisCount: 2,
-              primary: false,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 15,
-              childAspectRatio: 0.8,
-              children: <Widget>[
-                _buildCard(
-                    'Road Accident', "images/accident.png", true, context),
-                _buildCard(
-                    'Need Ambulance', "images/ambulance.png", true, context),
-                _buildCard('Drowning', "images/drowning.png", true, context),
-                _buildCard('Fire Outbreak', "images/fire.png", true, context),
-                _buildCard('Collapsing Building', "images/collapse.png", true,
-                    context),
-                _buildCard('Land SLide', "images/landslide.png", true, context),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-        ],
-      ),
+        );
+      }),
     );
   }
 
@@ -68,7 +84,6 @@ class _DisasterPageState extends State<DisasterPage> {
                 blurRadius: 5,
               ),
             ],
-          
             color: Colors.white,
           ),
           child: Column(
@@ -90,7 +105,7 @@ class _DisasterPageState extends State<DisasterPage> {
               Hero(
                 tag: imgPath,
                 child: Container(
-                  height: 85,
+                  height: 100,
                   width: 75,
                   decoration: BoxDecoration(
                     image: DecorationImage(

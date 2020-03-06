@@ -1,5 +1,4 @@
 import 'package:chap/MainControllerPage.dart';
-import 'package:chap/TabFiles/googlemapPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -151,7 +150,8 @@ class _DisasterDetailState extends State<DisasterDetail> {
                   style: TextStyle(color: Colors.blue, fontSize: 18),
                 ),
                 onPressed: () {
-                  _addGeoPoint();
+                  // _addGeoPoint();
+                  uploadToFirestore();
                   Navigator.of(context).pop();
                   setState(() {
                     description.text = '';
@@ -219,33 +219,6 @@ class _DisasterDetailState extends State<DisasterDetail> {
                           style: TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                      SizedBox(
-                        height: 15,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(Icons.add_location,
-                                size: 30, color: Colors.blue),
-                            onPressed: () {},
-                          ),
-                          RaisedButton(
-                            color: Colors.blueAccent,
-                            child: Text(
-                              'Pick Location',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 20),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => GoogleMapPage()));
-                            },
-                          ),
-                        ],
                       ),
                       SizedBox(
                         height: 15,

@@ -1,16 +1,16 @@
 import 'dart:io';
 
 import 'package:chap/MainControllerPage.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 // import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-
-import 'googlemapPage.dart';
+import 'package:location/location.dart';
 
 class DisasterSpecificationPage extends StatefulWidget {
   @override
@@ -25,28 +25,118 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
 
   File imageFile;
   String _mydescription;
-  String _mylocation;
+  String _incidence;
   String url;
+  Location location = Location();
+  Firestore firestore = Firestore.instance;
+  Geoflutterfire geo = Geoflutterfire();
+
+  Future<DocumentReference> _addGeoPoint() async {
+    try {
+      toggleLoading();
+
+      var pos = await location.getLocation();
+      var dbTimeKey = DateTime.now();
+      var formatDate = DateFormat('MMM d, yyyy');
+      var formatTime = DateFormat('EEEE, hh:mm aaa');
+
+      String date = formatDate.format(dbTimeKey);
+      String time = formatTime.format(dbTimeKey);
+      StorageReference ref =
+          FirebaseStorage.instance.ref().child("Disaster Images/$time.jpg");
+      StorageUploadTask uploadTask =  ref.putFile(imageFile);
+      String du = await ref.getDownloadURL();
+      return (await uploadTask.onComplete)
+          .ref
+          .getDownloadURL()
+          .whenComplete(() {
+        GeoFirePoint point =
+            geo.point(latitude: pos.latitude, longitude: pos.longitude);
+
+        return firestore.collection('disasters').add({
+          "time": time,
+          "date": date,
+          "incidence": _incidence,
+          "description": _mydescription,
+          'position': point.data,
+          "image": du
+        }).whenComplete(() {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => MainControllerPage()));
+
+          Fluttertoast.showToast(
+              msg:
+                  'Reported successfully. The disaster agents are being notified. Thankyou',
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.blue,
+              textColor: Colors.white,
+              toastLength: Toast.LENGTH_LONG);
+          toggleLoading();
+        });
+      });
+    } catch (e) {
+      toggleLoading();
+      Fluttertoast.showToast(
+          msg: '$e'.toString(),
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.blue,
+          textColor: Colors.white,
+          toastLength: Toast.LENGTH_LONG);
+    }
+  }
 
   _openGallery(BuildContext context) async {
-    var picture = await ImagePicker.pickImage(source: ImageSource.gallery);
+    final File picture =
+        await ImagePicker.pickImage(source: ImageSource.gallery);
     setState(() {
-      imageFile = picture;
+      return this.imageFile = picture;
     });
     print('image path$imageFile');
-    // this.setState({}[imageFile = picture]);
     Navigator.of(context).pop();
   }
 
   _openCamera(BuildContext context) async {
-    var picture = await ImagePicker.pickImage(source: ImageSource.camera);
-    // this.setState({}[imageFile = picture]);
+    final picture = await ImagePicker.pickImage(source: ImageSource.camera);
 
     setState(() {
-      return imageFile = picture;
+      return this.imageFile = picture;
     });
     print('image path$imageFile');
     Navigator.of(context).pop();
+  }
+
+  createAlertDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Report this Incidence.?'),
+            actions: <Widget>[
+              MaterialButton(
+                elevation: 5,
+                child: Text(
+                  'Yes',
+                  style: TextStyle(color: Colors.blue, fontSize: 18),
+                ),
+                onPressed: () {
+                  // _addGeoPoint();
+                  _addGeoPoint();
+                  Navigator.of(context).pop();
+                },
+              ),
+              MaterialButton(
+                elevation: 5,
+                child: Text(
+                  'No',
+                  style: TextStyle(fontSize: 18),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
   }
 
   Future<void> _showChoiceDialog(BuildContext context) {
@@ -97,78 +187,24 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
     } else {
       return Text('No image selected');
     }
-    // return null;
+    return null;
   }
 
-  bool validateAndSave() {
+  void validateAndSave() {
     final form = formKey.currentState;
-    if (form.validate()) {
+    if (form.validate() && imageFile != null) {
       form.save();
-      return true;
-    } else {
-      return false;
-    }
-  }
+      createAlertDialog(context);
 
-  void uploadDisaster() async {
-    if (validateAndSave()) {
-      try {
-        toggleLoading();
-        final StorageReference disasterImageRef =
-            FirebaseStorage.instance.ref().child("Disaster Images");
-        var timeKey = DateTime.now();
-        final StorageUploadTask uploadTask = disasterImageRef
-            .child(timeKey.toString() + ".jpg")
-            .putFile(imageFile);
-        var imageUrl = await (await uploadTask.onComplete).ref.getDownloadURL();
-        url = imageUrl.toString();
-        saveToDatabase(url);
-        toggleLoading();
-        SnackBar snackBar = SnackBar(
-          content: Text(
-            "Reported successfully",
-            textAlign: TextAlign.center,
-          ),
-        );
-
-        Scaffold.of(context).showSnackBar(snackBar);
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => MainControllerPage()));
-      } catch (e) {
-        print(e.toString());
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => MainControllerPage()));
-      }
     } else {
+      // return false;
       Fluttertoast.showToast(
-          msg: "Please fill all the details required",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIos: 1,
-          backgroundColor: Colors.red,
+          msg: 'please capture an image to help us serve you better.',
+          toastLength: Toast.LENGTH_LONG,
           textColor: Colors.white,
-          fontSize: 16.0);
+          backgroundColor: Colors.blue,
+          );
     }
-  }
-
-  void saveToDatabase(url) {
-    var dbTimeKey = DateTime.now();
-    var formatDate = DateFormat('MMM d, yyyy');
-    var formatTime = DateFormat('EEEE, hh:mm aaa');
-
-    String date = formatDate.format(dbTimeKey);
-    String time = formatTime.format(dbTimeKey);
-
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    var data = {
-      "date": date,
-      "time": time,
-      "image": url,
-      "description": _mydescription,
-      "location": _mylocation,
-    };
-
-    ref.child("Disasters").push().set(data);
   }
 
   bool loading = false;
@@ -178,83 +214,76 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
     });
   }
 
-// void _launchUrl(String Url)async{
-//     if (await canLaunch(Url)){
-//       await launch(Url);
-//     }
-//     else{
-//       throw "Could not Launch url";
-//     }
-//   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Disaster Specification'),
+        centerTitle: true,
+      ),
       body: !loading
           ? Builder(
               builder: (context) {
                 return Form(
                   key: formKey,
                   child: ListView(
+                    padding: EdgeInsets.only(left: 20),
                     children: <Widget>[
+                      SizedBox(height:10),
                       Padding(
                         padding: const EdgeInsets.only(right: 16, top: 16),
-                       child: Container(
-                         child: Column(
-                           mainAxisAlignment: MainAxisAlignment.center,
-                           children: <Widget>[
-                               TextFormField(
-                                 maxLines: 2,
-                                 keyboardType: TextInputType.multiline,
-                          controller: incidencefield,
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5)),
-                              labelText: "Describe the incidence",
-                              helperText: "What happened..?"),
-                          validator: (value) {
-                            if (value.isEmpty) {
-                              return "Description required";
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            return _mydescription = value;
-                          },
-                        ),
-                           ],
-                         ),
-                       ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: TextFormField(
-                          controller: locationfield,
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5)),
-                              labelText: "Location of incidence",
-                              helperText: "Roughly where you are now"),
-                          validator: (value) {
-                            if (value.isEmpty) {
-                              return "Location required";
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            return _mylocation = value;
-                          },
+                        child: Container(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              
+                              TextFormField(
+                                controller: locationfield,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5)),
+                                    labelText: "Nature of incidence",
+                                    helperText: "like a strange demonstration"),
+                                validator: (value) {
+                                  if (value.isEmpty) {
+                                    return "Location required";
+                                  }
+                                  return null;
+                                },
+                                onSaved: (value) {
+                                  return _incidence = value;
+                                },
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              TextFormField(
+                                maxLines: 2,
+                                keyboardType: TextInputType.multiline,
+                                controller: incidencefield,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(5)),
+                                    labelText: "Describe the incidence",
+                                    helperText: "What happened..?"),
+                                validator: (value) {
+                                  if (value.isEmpty) {
+                                    return "Description required";
+                                  }
+                                  return null;
+                                },
+                                onSaved: (value) {
+                                  return _mydescription = value;
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(
                         height: 20,
                       ),
-                      // Expanded(
-                      //   child: Container(height: 400,width: 400,),
-                      //   // child: _imageView(),
-                      // ),
                       Container(
                         height: 420,
                         width: 400,
@@ -291,40 +320,12 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                             ),
                             onPressed: () {
                               _showChoiceDialog(context);
-
-                              // Navigator.push(context,
-                              //     MaterialPageRoute(builder: (context) => UploadPhoto()));
                             },
                           ),
                         ],
                       ),
                       SizedBox(
                         height: 10,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          RaisedButton(
-                            color: Colors.blueAccent,
-                            child: Text(
-                              'Pick Location',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 20),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => GoogleMapPage()));
-                              // _launchUrl("https://www.google.com/maps/@-0.6988916,37.1001645,12902m/data=!3m1!1e3");
-                            },
-                          ),
-                          Icon(
-                            Icons.add_location,
-                            size: 35,
-                            color: Colors.blueAccent,
-                          ),
-                        ],
                       ),
                       SizedBox(
                         height: 30,
@@ -350,12 +351,7 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () {
-                                  // _submit();
-                                  uploadDisaster();
-                                  // if (imageFile != null) {
-                                  //   uploadDisaster();
-                                  // } else
-                                  //   return null;
+                                  validateAndSave();
                                 },
                                 child: Center(
                                   child: Text(
@@ -371,6 +367,7 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                           ),
                         ),
                       ),
+                      SizedBox(height: 20)
                     ],
                   ),
                 );
@@ -382,32 +379,14 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                 Center(
                   child: Text("Reporting..."),
                 ),
+                SizedBox(height: 20),
                 Center(
-                  child: CupertinoActivityIndicator(),
+                  child: CupertinoActivityIndicator(
+                    radius: 20,
+                  ),
                 )
               ],
             ),
     );
-  }
-
-  void _submit() {
-    if (formKey.currentState.validate()) {
-      setState(() {
-        incidencefield.text = "";
-        locationfield.text = "";
-        imageFile = null;
-      });
-      SnackBar snackBar = SnackBar(
-        content: Text(
-          "Reported successfully",
-          textAlign: TextAlign.center,
-        ),
-      );
-
-      Scaffold.of(context).showSnackBar(snackBar);
-      // Navigator.pushReplacement(context,
-      //     MaterialPageRoute(builder: (context) => MainControllerPage()));
-
-    }
   }
 }

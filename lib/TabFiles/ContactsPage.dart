@@ -14,6 +14,10 @@ class _ContactsState extends State<Contacts> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Call Centers Contacts'),
+        centerTitle: true,
+      ),
       body: StreamBuilder(
         stream: Firestore.instance.collection('contacts').snapshots(),
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -51,7 +55,7 @@ class _FirestoreListViewState extends State<FirestoreListView> {
       itemCount: widget.documents.length,
       itemBuilder: (BuildContext context, int index) {
         String location = widget.documents[index].data['location'].toString();
-        String contact = widget.documents[index].data['contact'].toString();
+        String contact = widget.documents[index].data['contact'];
         
 
         return ListTile(
@@ -76,7 +80,7 @@ class _FirestoreListViewState extends State<FirestoreListView> {
                 color: Colors.blueAccent,
               ),
               onPressed: (){
-                // _launchCaller(contact.toString());
+                _launchCaller(int.parse(contact.toString()));
               }
               ),
               onLongPress: (){},

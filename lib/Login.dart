@@ -162,9 +162,10 @@ class _LoginPageState extends State<LoginPage> {
                                   Text("Email", style: TextStyle(fontSize: 22)),
                                    TextFormField(
                                         controller: email,
-                                        // keyboardType:
-                                        //     TextInputType.emailAddress,
+                                        
+                                        
                                         decoration: InputDecoration(
+                                          icon: Icon(Icons.email),
                                           hintText: "Enter Email",
                                         ),
                                         validator: (value) {
@@ -191,6 +192,7 @@ class _LoginPageState extends State<LoginPage> {
                                         controller: password,
                                         obscureText: true,
                                         decoration: InputDecoration(
+                                          icon: Icon(Icons.enhanced_encryption),
                                           hintText: "Enter Password",
                                         ),
                                         validator: (value) {

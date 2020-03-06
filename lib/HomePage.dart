@@ -1,12 +1,9 @@
 import 'package:chap/DisasterPage.dart';
-import 'package:chap/TabFiles/Advice.dart';
-import 'package:chap/TabFiles/Contacts.dart';
 import 'package:chap/TabFiles/ContactsPage.dart';
 import 'package:chap/TabFiles/DisasterSpecificationPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'Authentication.dart';
 
 class HomePage extends StatefulWidget {
 

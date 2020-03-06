@@ -1,11 +1,12 @@
-import 'package:chap/HomePage.dart';
+import 'package:chap/About.dart';
+import 'package:chap/DisasterPage.dart';
 import 'package:chap/TabFiles/Advice.dart';
+import 'package:chap/TabFiles/ContactsPage.dart';
+import 'package:chap/TabFiles/googlemapPage.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'Authentication.dart';
-import 'MainControllerPages/AboutPage.dart';
 
 class MainControllerPage extends StatefulWidget {
   MainControllerPage({
@@ -22,9 +23,9 @@ class MainControllerPage extends StatefulWidget {
 class _MainControllerPageState extends State<MainControllerPage> {
   int _currentIndex = 0;
   final List<Widget> _children = [
-    HomePage(),
+    // HomePage(),
+    DisasterPage(),
     AdvicePage(),
-    AboutPage()
   ];
   void onTappedBar(int index) {
     setState(() {
@@ -48,10 +49,8 @@ class _MainControllerPageState extends State<MainControllerPage> {
           return AlertDialog(
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-              Icon(Icons.warning),
-              Text('logging out!')
-            ],),
+              children: <Widget>[Icon(Icons.add_alert), Text('logging out!')],
+            ),
             actions: <Widget>[
               MaterialButton(
                 elevation: 5.0,
@@ -115,27 +114,31 @@ class _MainControllerPageState extends State<MainControllerPage> {
             ListTile(
               title: Text('Contact Us'),
               leading: Icon(Icons.call),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => Contacts()));
+              },
+            ),
+             ListTile(
+              title: Text('See Maps'),
+              leading: Icon(Icons.map),
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => GoogleMapPage()));
+              },
             ),
             ListTile(
               title: Text('About'),
               leading: Icon(Icons.info),
               onTap: () {
-                Fluttertoast.showToast(
-                    msg: "About",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    timeInSecForIos: 1,
-                    backgroundColor: Colors.blue,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>AboutPage()));
               },
             ),
-            ListTile(
-              title: Text('More'),
-              leading: Icon(Icons.more),
-              onTap: () {},
+            Divider(
+              height: 2,
+              color: Colors.blue,
             ),
+           
             ListTile(
               title: Text('Log Out'),
               leading: Icon(Icons.exit_to_app),
@@ -158,12 +161,12 @@ class _MainControllerPageState extends State<MainControllerPage> {
 
         items: <Widget>[
           Icon(Icons.home, size: 20, color: Colors.black),
+          // Icon(Icons.add_alert, size: 20, color: Colors.black),
           Icon(Icons.list, size: 20, color: Colors.black),
-          Icon(Icons.exit_to_app, size: 20, color: Colors.black),
         ],
         animationDuration: Duration(milliseconds: 200),
         animationCurve: Curves.bounceInOut,
-        index: 1,
+        // index: 1,
         onTap: (index) {
           onTappedBar(index);
           debugPrint('current index is:$index');

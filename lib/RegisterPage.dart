@@ -124,6 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         keyboardType:
                                             TextInputType.emailAddress,
                                         decoration: InputDecoration(
+                                          icon: Icon(Icons.email),
                                           hintText: "Enter Email",
                                         ),
                                         validator: (value) {
@@ -150,6 +151,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         obscureText: true,
                                         controller: firstpassword,
                                         decoration: InputDecoration(
+                                          icon: Icon(Icons.enhanced_encryption),
                                           hintText: "Enter Password",
                                         ),
                                         validator: (value) {
@@ -173,6 +175,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         obscureText: true,
                                         controller: password,
                                         decoration: InputDecoration(
+                                          icon: Icon(Icons.enhanced_encryption),
                                           hintText: "Enter Password",
                                         ),
                                         validator: (value) {

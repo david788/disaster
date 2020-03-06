@@ -22,6 +22,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   var password = TextEditingController();
   var adminid = TextEditingController();
   String _myemail;
+  // ignore: unused_field
   String _mypassword;
   String _myadminid;
 
@@ -38,11 +39,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           context, MaterialPageRoute(builder: (context) => AdminLoginPage()));
 
       print(e.toString());
-      Fluttertoast.showToast(msg: '$e'.toString(),
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.blue,
-      textColor: Colors.white,
-      toastLength: Toast.LENGTH_LONG);
+      Fluttertoast.showToast(
+          msg: '$e'.toString(),
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.blue,
+          textColor: Colors.white,
+          toastLength: Toast.LENGTH_LONG);
     }
   }
 
@@ -124,75 +126,73 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                     height: 20,
                                   ),
                                   Text("Email", style: TextStyle(fontSize: 20)),
-                                   TextFormField(
-                                        controller: email,
-                                        // keyboardType:
-                                        //     TextInputType.emailAddress,
-                                        decoration: InputDecoration(
-                                          hintText: "Enter Email",
-                                        ),
-                                        validator: (value) {
-                                          if (value.isEmpty) {
-                                            return "please enter email";
-                                          } 
-                                           if (!value.contains('@')){
-                                            return "email is badly formated";
-                                          }else {
-                                            return null;
-                                          }
-                                        },
-                                        onSaved: (value) {
-                                          return _myemail = value;
-                                        },
-                                      ),
-                                 
+                                  TextFormField(
+                                    controller: email,
+                                    decoration: InputDecoration(
+                                      icon: Icon(Icons.email),
+                                      hintText: "Enter Email",
+                                    ),
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return "please enter email";
+                                      }
+                                      if (!value.contains('@')) {
+                                        return "email is badly formated";
+                                      } else {
+                                        return null;
+                                      }
+                                    },
+                                    onSaved: (value) {
+                                      return _myemail = value;
+                                    },
+                                  ),
                                   SizedBox(
                                     height: 20,
                                   ),
                                   Text("Password",
                                       style: TextStyle(fontSize: 20)),
-                                      TextFormField(
-                                        controller: password,
-                                        obscureText: true,
-                                        decoration: InputDecoration(
-                                          hintText: "Enter Password",
-                                        ),
-                                        validator: (value) {
-                                          if (value.isEmpty) {
-                                            return "please enter password";
-                                          } else {
-                                            return null;
-                                          }
-                                        },
-                                        onSaved: (value) {
-                                          return _mypassword = value;
-                                        },
-                                      ),
-                                 
+                                  TextFormField(
+                                    controller: password,
+                                    obscureText: true,
+                                    decoration: InputDecoration(
+                                      icon: Icon(Icons.enhanced_encryption),
+                                      hintText: "Enter Password",
+                                    ),
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return "please enter password";
+                                      } else {
+                                        return null;
+                                      }
+                                    },
+                                    onSaved: (value) {
+                                      return _mypassword = value;
+                                    },
+                                  ),
                                   Text("Admin Id",
                                       style: TextStyle(fontSize: 26)),
                                   SizedBox(
                                     height: 20,
                                   ),
-                                   TextFormField(
-                                        controller: adminid,
-                                        keyboardType: TextInputType.number,
-                                        obscureText: true,
-                                        decoration: InputDecoration(
-                                          hintText: "Enter Admin Id",
-                                        ),
-                                        validator: (value) {
-                                          if (value.isEmpty) {
-                                            return "please enter admin id";
-                                          } else {
-                                            return null;
-                                          }
-                                        },
-                                        onSaved: (value) {
-                                          return _myadminid = value;
-                                        },
-                                      ),
-                                
+                                  TextFormField(
+                                    controller: adminid,
+                                    keyboardType: TextInputType.number,
+                                    obscureText: true,
+                                    decoration: InputDecoration(
+                                      icon: Icon(Icons.enhanced_encryption),
+                                      hintText: "Enter Admin Id",
+                                    ),
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return "please enter admin id";
+                                      } else {
+                                        return null;
+                                      }
+                                    },
+                                    onSaved: (value) {
+                                      return _myadminid = value;
+                                    },
+                                  ),
                                   SizedBox(
                                     height: 20,
                                   ),
@@ -266,6 +266,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 ),
                 Center(
                   child: CupertinoActivityIndicator(
+                    
                     radius: 20,
                   ),
                 )

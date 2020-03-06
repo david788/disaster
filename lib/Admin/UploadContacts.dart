@@ -10,17 +10,19 @@ class UploadContacts extends StatefulWidget {
 
 class _UploadContactsState extends State<UploadContacts> {
   final formKey = GlobalKey<FormState>();
-  var  locationcontroller = TextEditingController();
-    var  contactcontroller = TextEditingController();
+  var locationcontroller = TextEditingController();
+  var contactcontroller = TextEditingController();
 
   String _contact;
   String _location;
-  getContactDetail(_contact){
-    this._contact=_contact;
+  getContactDetail(_contact) {
+    this._contact = _contact;
   }
-  getLocationDetail(_location){
-    this._location= _location;
+
+  getLocationDetail(_location) {
+    this._location = _location;
   }
+
   bool loading = false;
   void toggleLoading() {
     setState(() {
@@ -43,9 +45,10 @@ class _UploadContactsState extends State<UploadContacts> {
     }
   }
 
-  void addContact() async{
+  Future<void> addContact() async {
+    toggleLoading();
+
     try {
-      toggleLoading();
       DocumentReference documentReference =
           Firestore.instance.collection('contacts').document();
       Map<String, dynamic> contacts = {
@@ -54,17 +57,18 @@ class _UploadContactsState extends State<UploadContacts> {
       };
       documentReference.setData(contacts).whenComplete(() {
         setState(() {
-        contactcontroller.text = '';
-        locationcontroller.text ='';
+          contactcontroller.text = '';
+          locationcontroller.text = '';
         });
         Fluttertoast.showToast(
             msg: "Updated Successfully",
             toastLength: Toast.LENGTH_SHORT,
+            textColor: Colors.white,
             backgroundColor: Colors.blue);
+        toggleLoading();
       });
+    } catch (e) {
       toggleLoading();
-    }
-     catch (e) {
       Fluttertoast.showToast(
           msg: "$e".toString(),
           toastLength: Toast.LENGTH_SHORT,
@@ -102,7 +106,7 @@ class _UploadContactsState extends State<UploadContacts> {
                                 return _location = value;
                               });
                             },
-                            onChanged: (String _location){
+                            onChanged: (String _location) {
                               getLocationDetail(_location);
                             },
                             decoration: InputDecoration(
@@ -124,14 +128,14 @@ class _UploadContactsState extends State<UploadContacts> {
                                 return _contact = value;
                               });
                             },
-                            onChanged: (String _contact){
+                            onChanged: (String _contact) {
                               getContactDetail(_contact);
                             },
                             decoration: InputDecoration(
                                 labelText: "contact",
                                 helperText: "e.g., +254720123456"),
                           ),
-                          SizedBox(height:30),
+                          SizedBox(height: 30),
                           CupertinoButton(
                             color: Theme.of(context).primaryColor,
                             child: Text('Add Contact'),

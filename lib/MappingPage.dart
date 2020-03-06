@@ -1,7 +1,6 @@
 import 'package:chap/LaunchPage.dart';
 import 'package:chap/MainControllerPage.dart';
 import 'package:flutter/material.dart';
-import 'HomePage.dart';
 
 import 'Authentication.dart';
 

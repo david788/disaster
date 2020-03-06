@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
@@ -47,7 +46,7 @@ class _FireMapState extends State<FireMap> {
             bottom: 50,
             right: 10,
             child: FlatButton(
-                onPressed: _addGeoPoint,
+                onPressed: null,
                 child: Icon(
                   Icons.pin_drop,
                   color: Colors.white,
@@ -84,15 +83,5 @@ class _FireMapState extends State<FireMap> {
     );
   }
 
-Future<DocumentReference> _addGeoPoint() async {
- try{
-    var pos = await location.getLocation();
-  GeoFirePoint point = geo.point(latitude: pos.latitude, longitude: pos.longitude);
-  return firestore.collection('disasters').add({ 
-    'position': point.data,
-  });
- }catch(e){
-   Fluttertoast.showToast(msg: e.toString());
- }
-}
+
 }
