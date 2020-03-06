@@ -119,7 +119,7 @@ class _MainControllerPageState extends State<MainControllerPage> {
                     MaterialPageRoute(builder: (context) => Contacts()));
               },
             ),
-             ListTile(
+            ListTile(
               title: Text('See Maps'),
               leading: Icon(Icons.map),
               onTap: () {
@@ -131,14 +131,14 @@ class _MainControllerPageState extends State<MainControllerPage> {
               title: Text('About'),
               leading: Icon(Icons.info),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>AboutPage()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => AboutPage()));
               },
             ),
             Divider(
               height: 2,
               color: Colors.blue,
             ),
-           
             ListTile(
               title: Text('Log Out'),
               leading: Icon(Icons.exit_to_app),
@@ -150,27 +150,39 @@ class _MainControllerPageState extends State<MainControllerPage> {
         ),
       ),
       body: _children[_currentIndex],
-      bottomNavigationBar: CurvedNavigationBar(
-        // onTap: onTappedBar,
-        //  currentIndex = _currentIndex,
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(bottom:1),
+        child: CurvedNavigationBar(
+         
 
-        color: Colors.blueAccent,
-        backgroundColor: Colors.white,
-        buttonBackgroundColor: Colors.white,
-        height: 50,
+          color: Colors.blueAccent,
+          backgroundColor: Colors.white,
+          buttonBackgroundColor: Colors.blue,
+          height: 70,
 
-        items: <Widget>[
-          Icon(Icons.home, size: 20, color: Colors.black),
-          // Icon(Icons.add_alert, size: 20, color: Colors.black),
-          Icon(Icons.list, size: 20, color: Colors.black),
-        ],
-        animationDuration: Duration(milliseconds: 200),
-        animationCurve: Curves.bounceInOut,
-        // index: 1,
-        onTap: (index) {
-          onTappedBar(index);
-          debugPrint('current index is:$index');
-        },
+          items: <Widget>[
+            Column(
+              children: <Widget>[
+                IconButton(icon: Icon(Icons.home, color: Colors.white,), onPressed: null),
+                Text('Home', style: TextStyle(color: Colors.white,)),
+              ],
+            ),
+            Column(
+              children: <Widget>[
+                IconButton(icon: Icon(Icons.list, color: Colors.white,), onPressed: null),
+                Text('Advice',
+                    style: TextStyle(color: Colors.white, )),
+              ],
+            ),
+          ],
+          animationDuration: Duration(milliseconds: 600),
+          animationCurve: Curves.bounceInOut,
+          // index: 1,
+          onTap: (index) {
+            onTappedBar(index);
+            debugPrint('current index is:$index');
+          },
+        ),
       ),
     );
   }
