@@ -1,9 +1,13 @@
+//firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+//flutter
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 
+//logic
 class UploadAdvicePge extends StatefulWidget {
   @override
   _UploadAdvicePgeState createState() => _UploadAdvicePgeState();
@@ -23,17 +27,63 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
     this._advice = _advice;
   }
 
+//loading spinner
   bool loading = false;
   void toggleLoading() {
     setState(() {
       loading = !loading;
     });
   }
+
+  //dialog for the admin to confirm upload of content
+  createAlertDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                Icon(Icons.warning),
+                Text(
+                  'Update Advice?',
+                  style: TextStyle(fontSize: 20, color: Colors.blue),
+                )
+              ],
+            ),
+            actions: <Widget>[
+              MaterialButton(
+                elevation: 5.0,
+                child: Text(
+                  'Yes',
+                  style: TextStyle(fontSize: 20, color: Colors.blue),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+
+                  uploadAdvice();
+                },
+              ),
+              MaterialButton(
+                elevation: 5.0,
+                child: Text(
+                  'No',
+                  style: TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+//the function to upload the advice content to firestore
   Future<void> uploadAdvice() async {
     toggleLoading();
 
     try {
-     
       var dbTimeKey = DateTime.now();
 
       var formatDate = DateFormat('MMM d, yyyy');
@@ -42,10 +92,11 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
       String date = formatDate.format(dbTimeKey);
       String time = formatTime.format(dbTimeKey);
       DocumentReference documentReference =
-          Firestore.instance.collection('advice').document('$date+$time');
+          Firestore.instance.collection('advice').document();
       Map<String, dynamic> advice = {
         "time": time,
         "date": date,
+        "timestamp": dbTimeKey,
         "title": _title,
         "content": _advice,
       };
@@ -69,6 +120,8 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
           backgroundColor: Colors.blue);
     }
   }
+
+//ui part
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,10 +135,12 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
                   key: formKey,
                   child: ListView(
                     children: <Widget>[
-                      Text(
-                        'Post an advice to Clients',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20),
+                      Center(
+                        child: Text(
+                          'Post an advice to Clients',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 20),
+                        ),
                       ),
                       SizedBox(height: 10),
                       TextFormField(
@@ -106,7 +161,7 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
                         },
                         decoration: InputDecoration(
                             labelText: "Title",
-                            helperText: "e.g., How to Handle a Drowned Person"),
+                            helperText: "e.g., How to Handle Fire..."),
                       ),
                       SizedBox(height: 10),
                       Container(
@@ -114,9 +169,9 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             TextFormField(
-                              maxLines: 6,
                               controller: advicecontroller,
                               keyboardType: TextInputType.multiline,
+                              maxLines: 8,
                               validator: (value) {
                                 if (value.isEmpty) {
                                   return "advice content required";
@@ -143,7 +198,10 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
                           color: Theme.of(context).primaryColor,
                           child: Text(
                             'Upload',
-                            style: TextStyle(fontSize: 20),
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                            ),
                           ),
                           onPressed: validate),
                     ],
@@ -160,7 +218,7 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
 
   void validate() {
     if (formKey.currentState.validate()) {
-      uploadAdvice();
+      createAlertDialog(context);
     } else {
       Fluttertoast.showToast(
           msg: 'Please fill all the details',
@@ -171,6 +229,4 @@ class _UploadAdvicePgeState extends State<UploadAdvicePge> {
           gravity: ToastGravity.BOTTOM);
     }
   }
-
-  
 }

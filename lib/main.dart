@@ -1,13 +1,17 @@
-import 'package:chap/Authentication.dart';
-import 'package:chap/MappingPage.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'Login.dart';
+import 'MappingPage.dart';
 
-void main() => runApp(MaterialApp(
-  debugShowCheckedModeBanner: false,
-  // home: AdminHomePage(),
-  home: MappingPage(auth: Auth(),),
-
-));
-
-
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  var email = prefs.getString('useremail');
+  print(email);
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: email == null ? LoginPage() : MappingPage(),
+    theme: ThemeData(primaryColor: Colors.cyan, primarySwatch: Colors.cyan),
+  ));
+}

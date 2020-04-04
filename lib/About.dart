@@ -1,32 +1,44 @@
+//firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+//flutter
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+//logic part
 class AboutPage extends StatefulWidget {
   @override
   _AboutPageState createState() => _AboutPageState();
 }
 
 class _AboutPageState extends State<AboutPage> {
+  //ui part
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: FlexibleSpaceBar(
-          title: Text("About Us"),
+          title: Text(
+            "About Us",
+            style: TextStyle(color: Colors.white),
+          ),
           centerTitle: true,
         ),
       ),
       body: StreamBuilder(
         stream: Firestore.instance.collection('about').snapshots(),
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (!snapshot.hasData)
-            return Center(
-                child: CupertinoActivityIndicator(
-              radius: 20,
-            ));
-
-          return AboutList(documents: snapshot.data.documents);
+          if (!snapshot.hasData) return Center(child: Text("no data"));
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
+              return Center(
+                  child: CupertinoActivityIndicator(
+                radius: 20,
+              ));
+            default:
+              return AboutList(documents: snapshot.data.documents);
+          }
         },
       ),
     );

@@ -1,23 +1,30 @@
-import 'package:chap/MainControllerPage.dart';
-import 'package:chap/RegisterPage.dart';
+//firebase
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+//flutter
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import 'Authentication.dart';
-// import 'package:fluttertoast/fluttertoast.dart';
+//pages
+import 'package:chap/Admin/AdminHomePage.dart';
+import 'package:chap/PasswordResetPage.dart';
+import 'package:chap/RegisterPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'HomePage.dart';
 
+//logic part
 class LoginPage extends StatefulWidget {
-  LoginPage({this.auth, this.onSignedIn});
-  final AuthImplimentation auth;
-  final VoidCallback onSignedIn;
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _isUserVerified;
+
+  //loading spinner
   bool loading = false;
   void toggleLoading() {
     setState(() {
@@ -25,34 +32,111 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  String _myemail;
-  String _mypassword;
+//vissibility of the obscure text
+  bool isHidden = true;
+  void toggleVisibility() {
+    setState(() {
+      isHidden = !isHidden;
+    });
+  }
+
   final formKey = GlobalKey<FormState>();
   var email = TextEditingController();
   var password = TextEditingController();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  Future<void> loginUser(var email, var password) async {
-    try {
-      toggleLoading();
-      await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => MainControllerPage()));
 
-      toggleLoading();
+  bool isLoggedIn = false;
+  String useremail = '';
+
+//the shared prefs that will store a value to maintain auth state 
+  Future<Null> storeLoginState() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('useremail', email.text);
+
+    setState(() {
+      useremail = email.text;
+      isLoggedIn = true;
+    });
+  }
+
+  //login function to log user and 
+  //verify whether the user account is verified or not
+  //then store a value to shared prefs
+  Future<void> loginUser(var email, var password) async {
+    toggleLoading();
+    try {
+     
+      await userVerification();
+      var user = await FirebaseAuth.instance.currentUser();
+      if (_isUserVerified == true) {
+        await Firestore.instance
+            .collection('users')
+            .document(user.uid)
+            .get()
+            .then((DocumentSnapshot ds) {
+          if (ds['usertype'].toString() == "client") {
+            print(ds.data);
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => HomePage(
+                          userid: user.uid,
+                        )));
+          }
+          if (ds['usertype'].toString() == "admin") {
+            print(ds.data);
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AdminHomePage(
+                          userid: user.uid,
+                        )));
+          }
+          if (!ds.exists) {
+            print(ds.data);
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => LoginPage()));
+          }
+        });
+        await storeLoginState();
+        toggleLoading();
+      } else {
+        toggleLoading();
+        createAlertDialog(context);
+      }
     } catch (e) {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => LoginPage()));
-
+      toggleLoading();
       print(e.toString());
-      Fluttertoast.showToast(msg: '$e',
-      toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.blueAccent,);
+      Fluttertoast.showToast(
+        msg: e.toString(),
+        textColor: Colors.white,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.blueAccent,
+      );
     }
-    widget.onSignedIn();
   }
 
+  //user verification done here whether they have verified the email or not
+  Future userVerification() async {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    var _authenticatedUser = await _auth.signInWithEmailAndPassword(
+        email: email.text, password: password.text);
+
+    if (_authenticatedUser.user.isEmailVerified) {
+      setState(() {
+        _isUserVerified = true;
+      });
+    } else {
+      setState(() {
+        _isUserVerified = false;
+      });
+    }
+  }
+
+//inputs validation
   void _validateForm() {
     try {
       if (formKey.currentState.validate()) {
@@ -63,11 +147,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<String> getCurrentUser() async {
-    FirebaseUser firebaseUser = await _firebaseAuth.currentUser();
-    return firebaseUser.uid;
-  }
-
+//widget to create a horizontal line
   Widget horizontalLine() => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Container(
@@ -76,6 +156,46 @@ class _LoginPageState extends State<LoginPage> {
           color: Colors.black26.withOpacity(.2),
         ),
       );
+
+// the automated checking of whether the email is verified
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+//the function to send email verification after its invoked by the dialog
+  // Future<void> sendEmailVerification(String email) async {
+  //   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  //   var user = await _firebaseAuth.currentUser();
+  //   user.sendEmailVerification();
+  // }
+
+//the dialog popped for the user to invoke sending of the verification code
+  createAlertDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Email not yet verified'),
+            content: Text('You have to verify your email so as to continue.'),
+            actions: <Widget>[
+              MaterialButton(
+                elevation: 5.0,
+                child: Text(
+                  'OK',
+                  style: TextStyle(fontSize: 20, color: Colors.blue),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+//ui part
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,15 +233,15 @@ class _LoginPageState extends State<LoginPage> {
                             Image.asset("images/logo.png"),
                             Text(
                               'Ripoti Chapchap',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.blue),
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: Theme.of(context).primaryColor),
                             ),
                           ],
                         ),
                         SizedBox(
                           height: 100,
                         ),
-                        // FormCard(),
                         Form(
                           key: formKey,
                           child: Container(
@@ -147,73 +267,68 @@ class _LoginPageState extends State<LoginPage> {
                               padding: const EdgeInsets.only(
                                   left: 16, right: 16, top: 16),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
                                   Text(
                                     'login',
                                     style: TextStyle(
-                                        fontSize: 45,
+                                        fontSize: 30,
                                         color: CupertinoTheme.of(context)
                                             .primaryColor),
                                   ),
                                   SizedBox(
                                     height: 30,
                                   ),
-                                  Text("Email", style: TextStyle(fontSize: 22)),
-                                   TextFormField(
-                                        controller: email,
-                                        
-                                        
-                                        decoration: InputDecoration(
-                                          icon: Icon(Icons.email),
-                                          hintText: "Enter Email",
-                                        ),
-                                        validator: (value) {
-                                          if (value.isEmpty) {
-                                            return "please enter email";
-                                          }
-                                            if (!value.contains('@')){
-                                            return "email is badly formated";
-                                          } else {
-                                            return null;
-                                          }
-                                        },
-                                        onSaved: (value) {
-                                          return _myemail = value;
-                                        },
-                                      ),
-                                  
+                                  TextFormField(
+                                    controller: email,
+                                    decoration: InputDecoration(
+                                      prefixIcon: Icon(Icons.email),
+                                      hintText: "Enter Email",
+                                      labelText: "email",
+                                    ),
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return "please enter email";
+                                      }
+                                      if (!value.contains('@')) {
+                                        return "email is badly formated";
+                                      } else {
+                                        return null;
+                                      }
+                                    },
+                                  ),
                                   SizedBox(
                                     height: 30,
                                   ),
-                                  Text("Password",
-                                      style: TextStyle(fontSize: 22)),
-                                       TextFormField(
-                                        controller: password,
-                                        obscureText: true,
-                                        decoration: InputDecoration(
-                                          icon: Icon(Icons.enhanced_encryption),
-                                          hintText: "Enter Password",
-                                        ),
-                                        validator: (value) {
-                                          if (value.isEmpty) {
-                                            return "please enter password";
-                                          }
-                                        
-                                          else {
-                                            return null;
-                                          }
-                                          // switch(value){
-                                          //   case value.isEmpty:
-                                          //   return "";
-
-                                          // }
-                                        },
-                                        onSaved: (value) {
-                                          return _mypassword = value;
-                                        },
-                                      ),
-                                 
+                                  TextFormField(
+                                    controller: password,
+                                    obscureText: isHidden,
+                                    maxLength: 8,
+                                    decoration: InputDecoration(
+                                      prefixIcon:
+                                          Icon(Icons.enhanced_encryption),
+                                      suffixIcon: isHidden
+                                          ? IconButton(
+                                              icon: Icon(Icons.visibility),
+                                              onPressed: () {
+                                                toggleVisibility();
+                                              })
+                                          : IconButton(
+                                              icon: Icon(Icons.visibility_off),
+                                              onPressed: () {
+                                                toggleVisibility();
+                                              }),
+                                      hintText: "Enter Password",
+                                      labelText: "password",
+                                    ),
+                                    validator: (value) {
+                                      if (value.isEmpty) {
+                                        return "please enter password";
+                                      } else {
+                                        return null;
+                                      }
+                                    },
+                                  ),
                                   SizedBox(
                                     height: 35,
                                   ),
@@ -225,8 +340,9 @@ class _LoginPageState extends State<LoginPage> {
                                         child: Text(
                                           "Clear",
                                           style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.blue,
+                                            fontSize: 18,
+                                            color:
+                                                Theme.of(context).primaryColor,
                                           ),
                                         ),
                                         onPressed: () {
@@ -241,10 +357,17 @@ class _LoginPageState extends State<LoginPage> {
                                           "Forgot Password?",
                                           style: TextStyle(
                                             fontSize: 16,
-                                            color: Colors.blue,
+                                            color:
+                                                Theme.of(context).primaryColor,
                                           ),
                                         ),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Navigator.push(
+                                              context,
+                                              CupertinoPageRoute(
+                                                  builder: (context) =>
+                                                      PasswordReset()));
+                                        },
                                       ),
                                     ],
                                   ),
@@ -253,7 +376,6 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-
                         SizedBox(
                           height: 20,
                         ),
@@ -261,16 +383,14 @@ class _LoginPageState extends State<LoginPage> {
                           color: CupertinoTheme.of(context).primaryColor,
                           child: Text(
                             'Login',
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(fontSize: 18, color: Colors.white),
                           ),
                           onPressed: () {
                             _validateForm();
-
-                            // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>MainControllerPage()));
                           },
                         ),
                         SizedBox(
-                          height: 10,
+                          height: 20,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -283,8 +403,9 @@ class _LoginPageState extends State<LoginPage> {
                             horizontalLine(),
                           ],
                         ),
+                        SizedBox(height: 10),
                         FlatButton(
-                          child: Text('Dont have an account.? Create new'),
+                          child: Text('Dont have an account.? Sign Up...'),
                           onPressed: () {
                             Navigator.push(
                                 context,
@@ -292,28 +413,18 @@ class _LoginPageState extends State<LoginPage> {
                                     builder: (context) => RegisterPage()));
                           },
                         ),
+                        SizedBox(height: 10),
                       ],
                     ),
                   ),
                 ),
               ],
             )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Center(
-                    child: Text("please wait..."),
-                  ),
-                ),
-                Center(
-                  child: CupertinoActivityIndicator(
-                    radius: 20,
-                    animating: true,
-                  ),
-                )
-              ],
+          : Center(
+              child: CupertinoActivityIndicator(
+                radius: 20,
+                animating: true,
+              ),
             ),
     );
   }

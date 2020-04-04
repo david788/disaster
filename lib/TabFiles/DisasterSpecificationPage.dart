@@ -1,17 +1,20 @@
+//firebase
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
+import 'package:location/location.dart';
+
+//flutter
 import 'dart:io';
 
-import 'package:chap/MainControllerPage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:geoflutterfire/geoflutterfire.dart';
-// import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:location/location.dart';
 
+//logic part
 class DisasterSpecificationPage extends StatefulWidget {
   @override
   _DisasterSpecificationPageState createState() =>
@@ -21,20 +24,88 @@ class DisasterSpecificationPage extends StatefulWidget {
 class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
   final formKey = GlobalKey<FormState>();
   var incidencefield = TextEditingController();
-  var locationfield = TextEditingController();
+  var naturefield = TextEditingController();
 
-  File imageFile;
-  String _mydescription;
-  String _incidence;
+  File _image;
   String url;
+
   Location location = Location();
   Firestore firestore = Firestore.instance;
   Geoflutterfire geo = Geoflutterfire();
 
-  Future<DocumentReference> _addGeoPoint() async {
+  //the function to upload the disaster when an image is selected by the user
+  Future<void> uploadDisasterAndImage(BuildContext context) async {
+    toggleLoading();
     try {
-      toggleLoading();
+      var dbTimeKey = DateTime.now();
+      var pos = await location.getLocation();
+      var formatDate = DateFormat('MMM d, yyyy');
+      var formatTime = DateFormat('EEEE, hh:mm aaa');
 
+      String date = formatDate.format(dbTimeKey);
+      String time = formatTime.format(dbTimeKey);
+
+      final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+      var user = await _firebaseAuth.currentUser();
+      StorageReference firebaseStorageRef = FirebaseStorage.instance
+          .ref()
+          .child('Disaster Images/$dbTimeKey.jpg');
+      StorageUploadTask uploadTask = firebaseStorageRef.putFile(_image);
+      var imageurl = await (await uploadTask.onComplete).ref.getDownloadURL();
+      var url = imageurl.toString();
+
+      print("image uri is:" + url);
+
+      DocumentReference documentReference =
+          Firestore.instance.collection('disasters').document();
+      Map<String, dynamic> incidences = {
+        "description": incidencefield.text,
+        "incidence": naturefield.text,
+        "time": time,
+        "image": imageurl,
+        "timestamp": dbTimeKey,
+        "date": date,
+        "phonenumber": usercontact,
+        "disasterid": user.uid,
+        "position": {
+          "geohash": pos.hashCode.toString(),
+          "latitude": pos.latitude.toString(),
+          "longitude": pos.longitude.toString(),
+        }
+      };
+      documentReference.setData(incidences).whenComplete(() {
+        Fluttertoast.showToast(
+            msg:
+                'Reported successfully.\n The disaster agents are being notified. \nThankyou',
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.blue,
+            textColor: Colors.white,
+            toastLength: Toast.LENGTH_LONG);
+        setState(() {
+          incidencefield.text = '';
+          naturefield.text = '';
+          _image = null;
+        });
+        toggleLoading();
+        print("Disaster uploaded");
+      });
+    } catch (e) {
+      toggleLoading();
+      Fluttertoast.showToast(
+        msg: "oops! something went wrong.\n Try again",
+        toastLength: Toast.LENGTH_LONG,
+        textColor: Colors.white,
+        backgroundColor: Colors.blue,
+      );
+      print(e);
+    }
+  }
+
+//the function to upload the disaster incase no image is selected by the user
+  Future<void> uploadDisaster() async {
+    toggleLoading();
+
+    try {
       var pos = await location.getLocation();
       var dbTimeKey = DateTime.now();
       var formatDate = DateFormat('MMM d, yyyy');
@@ -42,67 +113,102 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
 
       String date = formatDate.format(dbTimeKey);
       String time = formatTime.format(dbTimeKey);
-      StorageReference ref =
-          FirebaseStorage.instance.ref().child("Disaster Images/$time.jpg");
-      StorageUploadTask uploadTask =  ref.putFile(imageFile);
-      String du = await ref.getDownloadURL();
-      return (await uploadTask.onComplete)
-          .ref
-          .getDownloadURL()
-          .whenComplete(() {
-        GeoFirePoint point =
-            geo.point(latitude: pos.latitude, longitude: pos.longitude);
 
-        return firestore.collection('disasters').add({
-          "time": time,
-          "date": date,
-          "incidence": _incidence,
-          "description": _mydescription,
-          'position': point.data,
-          "image": du
-        }).whenComplete(() {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => MainControllerPage()));
+      final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+      var user = await _firebaseAuth.currentUser();
 
-          Fluttertoast.showToast(
-              msg:
-                  'Reported successfully. The disaster agents are being notified. Thankyou',
-              gravity: ToastGravity.BOTTOM,
-              backgroundColor: Colors.blue,
-              textColor: Colors.white,
-              toastLength: Toast.LENGTH_LONG);
-          toggleLoading();
+      DocumentReference documentReference =
+          Firestore.instance.collection('disasters').document();
+      Map<String, dynamic> contacts = {
+        "description": incidencefield.text,
+        "incidence": naturefield.text,
+        "time": time,
+        "timestamp": dbTimeKey,
+        "date": date,
+        "phonenumber": usercontact,
+        "disasterid": user.uid,
+        "position": {
+          "geohash": pos.hashCode.toString(),
+          "latitude": pos.latitude.toString(),
+          "longitude": pos.longitude.toString(),
+        }
+      };
+      documentReference.setData(contacts).whenComplete(() {
+        setState(() {
+          incidencefield.text = '';
+          naturefield.text = '';
         });
+        Fluttertoast.showToast(
+            msg:
+                'Reported successfully. \n The disaster agents are being notified.\n Thankyou',
+            toastLength: Toast.LENGTH_SHORT,
+            textColor: Colors.white,
+            backgroundColor: Colors.blue);
+        toggleLoading();
       });
     } catch (e) {
       toggleLoading();
       Fluttertoast.showToast(
-          msg: '$e'.toString(),
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.blue,
+          msg: "oops! something went wrong. \n Try again",
+          toastLength: Toast.LENGTH_SHORT,
           textColor: Colors.white,
-          toastLength: Toast.LENGTH_LONG);
+          backgroundColor: Colors.blue);
     }
   }
 
-  _openGallery(BuildContext context) async {
-    final File picture =
-        await ImagePicker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      return this.imageFile = picture;
-    });
-    print('image path$imageFile');
-    Navigator.of(context).pop();
+//validate inputs
+  void validateAndSave() {
+    final form = formKey.currentState;
+    if (form.validate()) {
+      createAlertDialog(context);
+    } else {
+      return null;
+    }
   }
 
-  _openCamera(BuildContext context) async {
-    final picture = await ImagePicker.pickImage(source: ImageSource.camera);
+//function to get reporter's contact
+  Future _getSenderContact() async {
+    var user = await FirebaseAuth.instance.currentUser();
+
+    await Firestore.instance
+        .collection('users')
+        .document(user.uid)
+        .get()
+        .then((DocumentSnapshot ds) {
+      setState(() {
+        usercontact = ds['contact'];
+      });
+    });
+  }
+
+  String usercontact = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _getSenderContact();
+  }
+
+//opens the user's device gallery
+  _openGallery(BuildContext context) async {
+    Navigator.of(context).pop();
+    var image = await ImagePicker.pickImage(source: ImageSource.gallery);
 
     setState(() {
-      return this.imageFile = picture;
+      _image = image;
+      print('Image Path $_image');
     });
-    print('image path$imageFile');
+  }
+
+//opens the user's device camera
+  _openCamera(BuildContext context) async {
     Navigator.of(context).pop();
+    var image = await ImagePicker.pickImage(source: ImageSource.camera);
+
+    setState(() {
+      _image = image;
+      print('Image Path $_image');
+    });
   }
 
   createAlertDialog(BuildContext context) {
@@ -110,24 +216,32 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Report this Incidence.?'),
+            title: Text(
+              'Warning!',
+              style: TextStyle(color: Colors.blue, fontSize: 20),
+            ),
+            content: Text("This disaster will be reported now."),
             actions: <Widget>[
               MaterialButton(
                 elevation: 5,
                 child: Text(
-                  'Yes',
+                  'Confirm',
                   style: TextStyle(color: Colors.blue, fontSize: 18),
                 ),
                 onPressed: () {
-                  // _addGeoPoint();
-                  _addGeoPoint();
-                  Navigator.of(context).pop();
+                  if (_image != null) {
+                    Navigator.of(context).pop();
+                    uploadDisasterAndImage(context);
+                  } else {
+                    Navigator.of(context).pop();
+                    uploadDisaster();
+                  }
                 },
               ),
               MaterialButton(
                 elevation: 5,
                 child: Text(
-                  'No',
+                  'Dismiss',
                   style: TextStyle(fontSize: 18),
                 ),
                 onPressed: () {
@@ -139,12 +253,14 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
         });
   }
 
+//the dialog to be popped when the user needs to select an image
   Future<void> _showChoiceDialog(BuildContext context) {
     return showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Select the Source'),
+            title: Text('Select the Source',
+                style: TextStyle(color: Colors.blue, fontSize: 20)),
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
@@ -173,11 +289,12 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
         });
   }
 
+//the widget to place the image or placeholder in the image container
   Widget _imageView() {
-    if (imageFile != null) {
+    if (_image != null) {
       try {
         return Image.file(
-          imageFile,
+          _image,
           width: 300,
           height: 400,
         );
@@ -185,28 +302,12 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
         print(e.toString());
       }
     } else {
-      return Text('No image selected');
+      return Image.asset("images/image_01.png");
     }
     return null;
   }
 
-  void validateAndSave() {
-    final form = formKey.currentState;
-    if (form.validate() && imageFile != null) {
-      form.save();
-      createAlertDialog(context);
-
-    } else {
-      // return false;
-      Fluttertoast.showToast(
-          msg: 'please capture an image to help us serve you better.',
-          toastLength: Toast.LENGTH_LONG,
-          textColor: Colors.white,
-          backgroundColor: Colors.blue,
-          );
-    }
-  }
-
+//loading spinner
   bool loading = false;
   void toggleLoading() {
     setState(() {
@@ -214,11 +315,16 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
     });
   }
 
+//ui part
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Disaster Specification'),
+        title: Text(
+          'Disaster Specification',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
       ),
       body: !loading
@@ -229,30 +335,31 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                   child: ListView(
                     padding: EdgeInsets.only(left: 20),
                     children: <Widget>[
-                      SizedBox(height:10),
+                      SizedBox(height: 10),
                       Padding(
                         padding: const EdgeInsets.only(right: 16, top: 16),
                         child: Container(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
-                              
+                              Text(
+                                  "If your issue is not predefined at the home page,\n please specify it in the following fields.\n \nWe are here to help you."),
+                              SizedBox(
+                                height: 15,
+                              ),
                               TextFormField(
-                                controller: locationfield,
+                                controller: naturefield,
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(5)),
+                                        borderRadius: BorderRadius.circular(5)),
                                     labelText: "Nature of incidence",
-                                    helperText: "like a strange demonstration"),
+                                    helperText:
+                                        "like a suspicious gang meeting..."),
                                 validator: (value) {
                                   if (value.isEmpty) {
-                                    return "Location required";
+                                    return "nature required";
                                   }
                                   return null;
-                                },
-                                onSaved: (value) {
-                                  return _incidence = value;
                                 },
                               ),
                               SizedBox(
@@ -272,9 +379,6 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                                     return "Description required";
                                   }
                                   return null;
-                                },
-                                onSaved: (value) {
-                                  return _mydescription = value;
                                 },
                               ),
                             ],
@@ -330,36 +434,44 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                       SizedBox(
                         height: 30,
                       ),
-                      Material(
-                        child: InkWell(
-                          child: Container(
-                            width: MediaQuery.of(context).size.width - 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [
-                                  Color(0xFF17ead9),
-                                  Color(0xFF6078ea)
-                                ]),
-                                borderRadius: BorderRadius.circular(25),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: Color(0xFF6078ea).withOpacity(.3),
-                                      offset: Offset(0.0, 8.0),
-                                      blurRadius: 8.0),
-                                ]),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  validateAndSave();
-                                },
-                                child: Center(
-                                  child: Text(
-                                    "Report",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 34,
-                                        fontWeight: FontWeight.bold),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, right: 20),
+                        child: Material(
+                          child: InkWell(
+                            child: Container(
+                              width: MediaQuery.of(context).size.width - 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(colors: [
+                                    Color(0xFF17ead9),
+                                    Color(0xFF6078ea)
+                                  ]),
+                                  borderRadius: BorderRadius.circular(25),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color:
+                                            Color(0xFF6078ea).withOpacity(.3),
+                                        offset: Offset(0.0, 8.0),
+                                        blurRadius: 8.0),
+                                  ]),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 20, right: 20),
+                                  child: InkWell(
+                                    onTap: () {
+                                      validateAndSave();
+                                    },
+                                    child: Center(
+                                      child: Text(
+                                        "Report",
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -373,19 +485,10 @@ class _DisasterSpecificationPageState extends State<DisasterSpecificationPage> {
                 );
               },
             )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Center(
-                  child: Text("Reporting..."),
-                ),
-                SizedBox(height: 20),
-                Center(
-                  child: CupertinoActivityIndicator(
-                    radius: 20,
-                  ),
-                )
-              ],
+          : Center(
+              child: CupertinoActivityIndicator(
+                radius: 20,
+              ),
             ),
     );
   }

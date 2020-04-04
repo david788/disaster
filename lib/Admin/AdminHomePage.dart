@@ -1,34 +1,43 @@
-import 'package:chap/Admin/UploadAdvice.dart';
-import 'package:chap/Admin/UploadContacts.dart';
-import 'package:chap/Admin/fcm.dart';
-import 'package:chap/Admin/reported.dart';
-import 'package:chap/TabFiles/ContactsPage.dart';
-import 'package:chap/TabFiles/googlemapPage.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+//firebase
+import 'package:chap/Login.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+//flutter
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
+//pages
+import 'package:chap/Admin/ReportedDisasters.dart';
+import 'package:chap/Admin/UploadAdvice.dart';
+import 'package:chap/Admin/UploadContacts.dart';
+import 'package:chap/Admin/UploadIncidence.dart';
+import 'package:chap/Admin/fcm.dart';
+import 'package:chap/TabFiles/Advice.dart';
+import 'package:chap/TabFiles/ContactsPage.dart';
+import 'package:chap/TabFiles/googlemapPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../About.dart';
-import '../Authentication.dart';
 
+//logic part
 class AdminHomePage extends StatefulWidget {
-  AdminHomePage({
-    this.auth,
-    this.onSignedOut,
-  });
-  final AuthImplimentation auth;
-  final VoidCallback onSignedOut;
+  AdminHomePage({  this.userid});
+  final userid;
+
   @override
   _AdminHomePageState createState() => _AdminHomePageState();
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
+  //the bottom navigation bar pages
   int _currentIndex = 0;
   final List<Widget> _children = [
-    Reported(),
+    ReportedDisasters(),
     MessageHandler(),
     UploadAdvicePge(),
     UploadContacts(),
+    UploadIncidence(),
   ];
   void onTappedBar(int index) {
     setState(() {
@@ -36,17 +45,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
     });
   }
 
-  Widget appBarTitle = Text("Welcome Admin");
   Icon searchIcon = Icon(Icons.search);
-  void logOutUser() async {
-    try {
-      await widget.auth.signOut();
-      widget.onSignedOut();
-    } catch (e) {
-      print(e.toString());
-    }
+
+  //logout user from the app
+  void logOut() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    // prefs.setString('useremail', null);
+    prefs.remove('useremail');
+    final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+    await _firebaseAuth.signOut();
+
+    setState(() {
+      // useremail = "";
+      isLoggedIn = false;
+      Navigator.of(context).pushReplacement(
+          CupertinoPageRoute(builder: (context) => LoginPage()));
+    });
   }
 
+//alert dialog to alert the user on logging out event
   createAlertDialog(BuildContext context) {
     return showDialog(
         context: context,
@@ -54,8 +72,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
           return AlertDialog(
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[Icon(Icons.add_alert), Text('logging out!')],
+              children: <Widget>[Icon(Icons.exit_to_app), Text('logging out!')],
             ),
+            content: Text("you are about to log out..."),
             actions: <Widget>[
               MaterialButton(
                 elevation: 5.0,
@@ -65,7 +84,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
                 onPressed: () {
                   Navigator.of(context).pop();
-                  logOutUser();
+                  logOut();
                 },
               ),
               MaterialButton(
@@ -83,6 +102,35 @@ class _AdminHomePageState extends State<AdminHomePage> {
         });
   }
 
+//user details for the drawer header
+  Future getDetails() async {
+    var user = await FirebaseAuth.instance.currentUser();
+
+    await Firestore.instance
+        .collection('users')
+        .document(user.uid)
+        .get()
+        .then((DocumentSnapshot ds) {
+      setState(() {
+        useremail = ds['email'];
+        usercontact = ds['contact'];
+        usertype = ds['usertype'];
+      });
+    });
+  }
+
+  String useremail = '';
+  String usercontact = '';
+  String usertype = '';
+  bool isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getDetails();
+  }
+
+//ui part
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,39 +138,89 @@ class _AdminHomePageState extends State<AdminHomePage> {
         child: ListView(
           children: <Widget>[
             DrawerHeader(
-              curve: Curves.bounceInOut,
-              child: Text(
-                'Ripoti chapchap',
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              ),
               decoration: BoxDecoration(
                 color: CupertinoTheme.of(context).primaryColor,
-                image:
-                    DecorationImage(image: AssetImage("images/image_01.png")),
+              ),
+              child: Container(
+                height: 200,
+                child: Stack(
+                  children: <Widget>[
+                    CircleAvatar(
+                      backgroundImage: AssetImage("images/image_01.png"),
+                      radius: 60,
+                    ),
+                    Positioned.directional(
+                      textDirection: TextDirection.ltr,
+                      top: 10,
+                      start: 160,
+                      child: Text("User:" + "  " + usertype,
+                          style: TextStyle(color: Colors.white, fontSize: 18)),
+                    ),
+                    Positioned.directional(
+                      textDirection: TextDirection.ltr,
+                      top: 40,
+                      start: 160,
+                      child: Text(
+                        usercontact,
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ),
+                    Positioned.directional(
+                      top: 120,
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        useremail,
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
             ListTile(
               title: Text('Contact Us'),
-              leading: Icon(Icons.call),
+              leading: Icon(
+                Icons.call,
+                color: Theme.of(context).primaryColorDark,
+              ),
               onTap: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => Contacts()));
+                    CupertinoPageRoute(builder: (context) => Contacts()));
               },
             ),
             ListTile(
-              title: Text('See Maps'),
-              leading: Icon(Icons.map),
+              title: Text('Advice'),
+              leading: Icon(
+                Icons.list,
+                color: Theme.of(context).primaryColorDark,
+              ),
               onTap: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => GoogleMapPage()));
+                    CupertinoPageRoute(builder: (context) => AdvicePage()));
+              },
+            ),
+            ListTile(
+              title: Text(
+                'See Maps',
+              ),
+              leading: Icon(
+                Icons.map,
+                color: Theme.of(context).primaryColorDark,
+              ),
+              onTap: () {
+                Navigator.push(context,
+                    CupertinoPageRoute(builder: (context) => GoogleMapPage()));
               },
             ),
             ListTile(
               title: Text('About'),
-              leading: Icon(Icons.info),
+              leading: Icon(
+                Icons.info,
+                color: Theme.of(context).primaryColorDark,
+              ),
               onTap: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => AboutPage()));
+                    CupertinoPageRoute(builder: (context) => AboutPage()));
               },
             ),
             Divider(
@@ -131,7 +229,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
             ),
             ListTile(
               title: Text('Log Out'),
-              leading: Icon(Icons.exit_to_app),
+              leading: Icon(
+                Icons.exit_to_app,
+                color: Theme.of(context).primaryColorDark,
+              ),
               onTap: () {
                 createAlertDialog(context);
               },
@@ -140,34 +241,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
         ),
       ),
       appBar: AppBar(
-        title: appBarTitle,
+        title: Text(
+          'Administrator',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
         actions: <Widget>[
           IconButton(
             icon: searchIcon,
             onPressed: () {
-              // setState(() {
-              //   if (this.searchIcon.icon == Icons.search) {
-              //     this.searchIcon = Icon(Icons.close);
-              //     this.appBarTitle = TextField(
-              //       style: TextStyle(color: Colors.white),
-              //       decoration: InputDecoration(
-
-              //         prefixIcon: Icon(
-              //           Icons.search,
-              //           color: Colors.white,
-
-              //         ),
-              //         hintText: "Disaster id",
-              //         hintStyle: TextStyle(color: Colors.white),
-              //       ),
-              //     );
-              //   } else {
-              //     this.searchIcon = Icon(Icons.search);
-              //     this.appBarTitle = Text("Welcome Admin");
-              //   }
-              // });
-
               showSearch(context: context, delegate: DataSearch());
             },
           ),
@@ -175,7 +258,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             itemBuilder: (BuildContext context) {
               return [
                 PopupMenuItem(
-                  child: Text("Feedback"),
+                  child: Text("Welcome Admin"),
                 ),
               ];
             },
@@ -184,35 +267,39 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
       body: _children[_currentIndex],
       bottomNavigationBar: CurvedNavigationBar(
-        color: Colors.blueAccent,
+        color: Colors.cyan,
         backgroundColor: Colors.white,
-        buttonBackgroundColor: Colors.white,
+        buttonBackgroundColor: Colors.cyan,
         height: 50,
         items: <Widget>[
-         
           Icon(
             Icons.home,
-            color: Colors.black,
+            color: Colors.white,
             size: 20,
           ),
-           Icon(
+          Icon(
             Icons.message,
-            color: Colors.black,
+            color: Colors.white,
             size: 20,
           ),
           Icon(
             Icons.add_comment,
-            color: Colors.black,
+            color: Colors.white,
             size: 20,
           ),
           Icon(
             Icons.contacts,
-            color: Colors.black,
+            color: Colors.white,
+            size: 20,
+          ),
+          Icon(
+            Icons.add_to_photos,
+            color: Colors.white,
             size: 20,
           ),
         ],
         animationDuration: Duration(milliseconds: 200),
-        index: 1,
+        index: 2,
         animationCurve: Curves.bounceInOut,
         onTap: (index) {
           onTappedBar(index);

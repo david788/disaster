@@ -1,8 +1,12 @@
+//firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+//flutter
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+//logic part
 class UploadContacts extends StatefulWidget {
   @override
   _UploadContactsState createState() => _UploadContactsState();
@@ -32,8 +36,7 @@ class _UploadContactsState extends State<UploadContacts> {
 
   void validate() {
     if (formKey.currentState.validate()) {
-      // toggleLoading();
-      addContact();
+      createAlertDialog(context);
     } else {
       Fluttertoast.showToast(
           msg: "all the fields are required",
@@ -45,6 +48,52 @@ class _UploadContactsState extends State<UploadContacts> {
     }
   }
 
+//dialog to confirm upload
+  createAlertDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                Icon(Icons.warning),
+                Text('Upload Contact?',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.blue,
+                    ))
+              ],
+            ),
+            actions: <Widget>[
+              MaterialButton(
+                elevation: 5.0,
+                child: Text(
+                  'Yes',
+                  style: TextStyle(fontSize: 20, color: Colors.blue),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+
+                  addContact();
+                },
+              ),
+              MaterialButton(
+                elevation: 5.0,
+                child: Text(
+                  'No',
+                  style: TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+//function to upload contacts to firestore
   Future<void> addContact() async {
     toggleLoading();
 
@@ -76,6 +125,7 @@ class _UploadContactsState extends State<UploadContacts> {
     }
   }
 
+//ui part
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,9 +138,11 @@ class _UploadContactsState extends State<UploadContacts> {
                       key: formKey,
                       child: ListView(
                         children: <Widget>[
-                          Text(
-                            'Post help Contact to Clients',
-                            style: TextStyle(fontSize: 20),
+                          Center(
+                            child: Text(
+                              'Post help Contact to Clients',
+                              style: TextStyle(fontSize: 20),
+                            ),
                           ),
                           SizedBox(height: 20),
                           TextFormField(
@@ -133,12 +185,16 @@ class _UploadContactsState extends State<UploadContacts> {
                             },
                             decoration: InputDecoration(
                                 labelText: "contact",
-                                helperText: "e.g., +254720123456"),
+                                helperText: "e.g., 0701234567"),
                           ),
-                          SizedBox(height: 30),
+                          SizedBox(height: 90),
                           CupertinoButton(
                             color: Theme.of(context).primaryColor,
-                            child: Text('Add Contact'),
+                            child: Text(
+                              'Upload',
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.white),
+                            ),
                             onPressed: validate,
                           )
                         ],

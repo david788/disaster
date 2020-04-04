@@ -1,12 +1,16 @@
-import 'package:chap/MainControllerPage.dart';
+//firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
+import 'package:location/location.dart';
+
+//flutter
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:intl/intl.dart';
-import 'package:location/location.dart';
 
+//logic part
 class DisasterDetail extends StatefulWidget {
   final assetPath, disasterName;
   DisasterDetail({this.assetPath, this.disasterName});
@@ -16,6 +20,7 @@ class DisasterDetail extends StatefulWidget {
 }
 
 class _DisasterDetailState extends State<DisasterDetail> {
+  //loading spinner
   bool loading = false;
   void toggleLoading() {
     setState(() {
@@ -23,22 +28,15 @@ class _DisasterDetailState extends State<DisasterDetail> {
     });
   }
 
-  String _description;
-  // String _disastername;
-  getDescription(_description) {
-    this._description = _description;
-  }
-
-  // getDisasterName(_disastername) {
-  //   this._disastername = _disastername;
-  // }
-
   final formKey = GlobalKey<FormState>();
   var description = TextEditingController();
+  var phoneNumber = TextEditingController();
+
   Location location = Location();
   Firestore firestore = Firestore.instance;
   Geoflutterfire geo = Geoflutterfire();
 
+//for fireship
   Future<DocumentReference> _addGeoPoint() async {
     try {
       toggleLoading();
@@ -47,7 +45,6 @@ class _DisasterDetailState extends State<DisasterDetail> {
       var dbTimeKey = DateTime.now();
       var formatDate = DateFormat('MMM d, yyyy');
       var formatTime = DateFormat('EEEE, hh:mm aaa');
-
       String date = formatDate.format(dbTimeKey);
       String time = formatTime.format(dbTimeKey);
 
@@ -57,12 +54,9 @@ class _DisasterDetailState extends State<DisasterDetail> {
         "time": time,
         "date": date,
         "incidence": widget.disasterName,
-        "description": _description,
+        "description": description.text,
         'position': point.data,
       }).whenComplete(() {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => MainControllerPage()));
-
         Fluttertoast.showToast(
             msg:
                 'Reported successfully. The disaster agents are being notified. Thankyou',
@@ -83,9 +77,32 @@ class _DisasterDetailState extends State<DisasterDetail> {
     }
   }
 
+//function to retrieve the reporter's contact automatically
+  Future _getSenderContact() async {
+    var user = await FirebaseAuth.instance.currentUser();
+
+    await Firestore.instance
+        .collection('users')
+        .document(user.uid)
+        .get()
+        .then((DocumentSnapshot ds) {
+      setState(() {
+        usercontact = ds['contact'];
+      });
+    });
+  }
+
+  String usercontact = '';
+//contact gotten on the initial state
+  @override
+  void initState() {
+    super.initState();
+    _getSenderContact();
+  }
+
+//the function to upload the disaster to firestore
   void uploadToFirestore() async {
     toggleLoading();
-    var pos = await Location().getLocation();
     try {
       var dbTimeKey = DateTime.now();
       var formatDate = DateFormat('MMM d, yyyy');
@@ -93,13 +110,20 @@ class _DisasterDetailState extends State<DisasterDetail> {
 
       String date = formatDate.format(dbTimeKey);
       String time = formatTime.format(dbTimeKey);
+      var pos = await Location().getLocation();
+      final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+      var user = await _firebaseAuth.currentUser();
+
       DocumentReference documentReference =
           Firestore.instance.collection('disasters').document();
       Map<String, dynamic> disasters = {
-        "description": _description,
+        "description": description.text,
         "incidence": widget.disasterName,
         "time": time,
+        "timestamp": dbTimeKey,
         "date": date,
+        "phonenumber": usercontact,
+        "disasterid": user.uid,
         "position": {
           "geohash": pos.hashCode.toString(),
           "latitude": pos.latitude.toString(),
@@ -107,22 +131,22 @@ class _DisasterDetailState extends State<DisasterDetail> {
         }
       };
       documentReference.setData(disasters).whenComplete(() {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => MainControllerPage()));
-
+        setState(() {
+          description.text = '';
+        });
+        toggleLoading();
         Fluttertoast.showToast(
             msg:
-                'Reported successfully. The disaster agents are being notified. Thankyou',
+                'Reported successfully.\n The disaster agents are being notified. \nThankyou',
             gravity: ToastGravity.BOTTOM,
             backgroundColor: Colors.blue,
             textColor: Colors.white,
             toastLength: Toast.LENGTH_LONG);
-        toggleLoading();
       });
     } catch (e) {
       toggleLoading();
       Fluttertoast.showToast(
-          msg: '$e'.toString(),
+          msg: 'oops! an error occurred.',
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.blue,
           textColor: Colors.white,
@@ -130,38 +154,43 @@ class _DisasterDetailState extends State<DisasterDetail> {
     }
   }
 
+//validate function for inputs
   void validate() {
     if (formKey.currentState.validate()) {
       createAlertDialog(context);
-    } else {}
+    } else {
+      return null;
+    }
   }
 
+//a dialog to alert the reporter to confirm the incidence
   createAlertDialog(BuildContext context) {
     return showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Report this Incidence.?'),
+            title: Text(
+              'Warning!',
+              style: TextStyle(color: Colors.blue, fontSize: 20),
+            ),
+            content: Text("This disaster will be reported now."),
             actions: <Widget>[
               MaterialButton(
                 elevation: 5,
                 child: Text(
-                  'Yes',
+                  'Confirm',
                   style: TextStyle(color: Colors.blue, fontSize: 18),
                 ),
                 onPressed: () {
                   // _addGeoPoint();
+                  Navigator.pop(context);
                   uploadToFirestore();
-                  Navigator.of(context).pop();
-                  setState(() {
-                    description.text = '';
-                  });
                 },
               ),
               MaterialButton(
                 elevation: 5,
                 child: Text(
-                  'No',
+                  'Dismiss',
                   style: TextStyle(fontSize: 18),
                 ),
                 onPressed: () {
@@ -173,12 +202,17 @@ class _DisasterDetailState extends State<DisasterDetail> {
         });
   }
 
+//ui part
   @override
   Widget build(BuildContext context) {
     return Builder(builder: (context) {
       return Scaffold(
           appBar: AppBar(
-            title: Text('Ripoti ChapChap'),
+            iconTheme: IconThemeData(color: Colors.white),
+            title: Text(
+              'Ripoti ChapChap',
+              style: TextStyle(color: Colors.white),
+            ),
             centerTitle: true,
           ),
           body: !loading
@@ -193,7 +227,7 @@ class _DisasterDetailState extends State<DisasterDetail> {
                         child: Text(
                           'Disaster',
                           style: TextStyle(
-                            fontSize: 35,
+                            fontSize: 30,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -203,11 +237,14 @@ class _DisasterDetailState extends State<DisasterDetail> {
                       ),
                       Hero(
                         tag: widget.assetPath,
-                        child: Image.asset(
-                          widget.assetPath,
-                          height: 180,
-                          width: 100,
-                          fit: BoxFit.contain,
+                        child: Container(
+                          height: 250,
+                          width: MediaQuery.of(context).size.width,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: NetworkImage(widget.assetPath),
+                                fit: BoxFit.fill),
+                          ),
                         ),
                       ),
                       SizedBox(
@@ -232,7 +269,7 @@ class _DisasterDetailState extends State<DisasterDetail> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
                                   TextFormField(
-                                    keyboardType: TextInputType.multiline,
+                                    // keyboardType: TextInputType.multiline,
                                     maxLines: 2,
                                     controller: description,
                                     decoration: InputDecoration(
@@ -248,12 +285,6 @@ class _DisasterDetailState extends State<DisasterDetail> {
                                         return 'please give a brief description of the incident';
                                       } else
                                         return null;
-                                    },
-                                    onSaved: (value) {
-                                      return _description = value;
-                                    },
-                                    onChanged: (String _description) {
-                                      getDescription(_description);
                                     },
                                   ),
                                 ],
@@ -310,19 +341,6 @@ class _DisasterDetailState extends State<DisasterDetail> {
               : Center(
                   child: CupertinoActivityIndicator(radius: 20),
                 ));
-    });
-  }
-}
-
-class AlertUser extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    SnackBar mySnackBar = SnackBar(
-      content: Text('Thanks'),
-    );
-    Scaffold.of(context).showSnackBar(mySnackBar);
-    return Builder(builder: (context) {
-      return Scaffold();
     });
   }
 }

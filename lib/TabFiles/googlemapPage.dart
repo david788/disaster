@@ -37,7 +37,7 @@ class _FireMapState extends State<FireMap> {
           
           initialCameraPosition:
               // CameraPosition(target: LatLng(24.142, -110.321), zoom: 15),
-              CameraPosition(target: LatLng(37.147424, -0.714098), zoom: 15),
+              CameraPosition(target: LatLng(37.1472781, -0.7235499), zoom: 15),
           onMapCreated: _onMapCreated,
           myLocationButtonEnabled: true,
           mapType: MapType.hybrid,
