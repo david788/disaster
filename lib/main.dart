@@ -12,6 +12,7 @@ Future<void> main() async {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     home: email == null ? LoginPage() : MappingPage(),
+    // home: LoginPage(),
     theme: ThemeData(primaryColor: Colors.cyan, primarySwatch: Colors.cyan),
   ));
 }

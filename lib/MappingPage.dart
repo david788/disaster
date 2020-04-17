@@ -87,7 +87,7 @@ class _MappingPageState extends State<MappingPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: Colors.transparent,
                 radius: 125,
                 backgroundImage: AssetImage("images/dstech.png"),
               ),

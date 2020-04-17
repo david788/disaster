@@ -1,6 +1,7 @@
 //firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 //flutter
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -9,10 +10,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 //pages
 import 'package:chap/Login.dart';
 
-
 //logic part
 class RegisterPage extends StatefulWidget {
- 
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
@@ -57,6 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
 //signUpUser function for registering new users to the app
 // and store their details to firestore
 //and send them email verification code
+//and save the user's device token to firestore
   Future signUpUser() async {
     toggleLoading();
     try {
@@ -86,8 +86,8 @@ class _RegisterPageState extends State<RegisterPage> {
       });
       await sendEmailVerification(email.text);
       print("code sent");
+      await _saveDeviceToken();
       toggleLoading();
-      createAlertDialog(context);
     } catch (e) {
       toggleLoading();
       print(e.toString());
@@ -126,6 +126,30 @@ class _RegisterPageState extends State<RegisterPage> {
         });
   }
 
+  //save users device token to firestore
+  final FirebaseMessaging _fcm = FirebaseMessaging();
+
+  _saveDeviceToken() async {
+    // Get the current user
+    var user = await FirebaseAuth.instance.currentUser();
+
+    // Get the token for this device
+    String fcmToken = await _fcm.getToken();
+    print(fcmToken);
+
+    if (fcmToken != null) {
+      await Firestore.instance
+          .collection('userstokens')
+          .document(user.uid)
+          .setData({
+        'devtoken': fcmToken,
+        'email': email.text,
+      }).whenComplete(() {
+        print("devtoken saved successfully");
+      });
+    }
+  }
+
 //ui part
   @override
   Widget build(BuildContext context) {
@@ -141,7 +165,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     children: <Widget>[
                       Padding(
                         padding: const EdgeInsets.only(top: 20),
-                        child: Image.asset("images/image_01.png"),
+                        child: Container(
+                          height: 350,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: AssetImage("images/background1.png"),
+                                fit: BoxFit.fill),
+                          ),
+                        ),
                       ),
                       Expanded(
                         child: Container(),
@@ -156,12 +187,21 @@ class _RegisterPageState extends State<RegisterPage> {
                         children: <Widget>[
                           Row(
                             children: <Widget>[
-                              Image.asset("images/logo.png"),
-                              Text(
-                                'Ripoti Chapchap',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: Theme.of(context).primaryColor),
+                              CircleAvatar(
+                                backgroundColor: Colors.transparent,
+                                backgroundImage:
+                                    AssetImage('images/chaplogo.jpg'),
+                                radius: 25,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  'Ripoti Chapchap',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ],
                           ),

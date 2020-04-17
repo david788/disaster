@@ -47,6 +47,9 @@ dependencies:
   font_awesome_flutter: ^8.7.0
   carousel_pro:
   provider:
+
+  network_to_file_image: ^2.2.8
+  image_fade: ^0.2.1
   
 
 

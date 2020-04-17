@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isLoggedIn = false;
   String useremail = '';
 
-//the shared prefs that will store a value to maintain auth state 
+//the shared prefs that will store a value to maintain auth state
   Future<Null> storeLoginState() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('useremail', email.text);
@@ -58,13 +58,12 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  //login function to log user and 
+  //login function to log user and
   //verify whether the user account is verified or not
   //then store a value to shared prefs
   Future<void> loginUser(var email, var password) async {
     toggleLoading();
     try {
-     
       await userVerification();
       var user = await FirebaseAuth.instance.currentUser();
       if (_isUserVerified == true) {
@@ -157,13 +156,6 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
-// the automated checking of whether the email is verified
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
 //the function to send email verification after its invoked by the dialog
   // Future<void> sendEmailVerification(String email) async {
   //   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -211,11 +203,18 @@ class _LoginPageState extends State<LoginPage> {
                   children: <Widget>[
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
-                      child: Image.asset("images/image_01.png"),
+                      child: Container(
+                        height: 315,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: AssetImage("images/background1.png"),
+                              fit: BoxFit.fill),
+                        ),
+                      ),
                     ),
-                    Expanded(
-                      child: Container(),
-                    ),
+                    // Expanded(
+                    //   child: Container(),
+                    // ),
 
                     //this part gave me an error that gave me headache...
                     // interfering with the container class only to find i pasted the image asset in that class,, weee...
@@ -230,12 +229,21 @@ class _LoginPageState extends State<LoginPage> {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            Image.asset("images/logo.png"),
-                            Text(
-                              'Ripoti Chapchap',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  color: Theme.of(context).primaryColor),
+                            CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              backgroundImage:
+                                  AssetImage('images/chaplogo.jpg'),
+                              radius: 25,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                'Ripoti Chapchap',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ],
                         ),
@@ -246,7 +254,7 @@ class _LoginPageState extends State<LoginPage> {
                           key: formKey,
                           child: Container(
                             width: double.infinity,
-                            height: 410,
+                            height: 380,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(8),

@@ -99,6 +99,14 @@ class _ReportedDisastersState extends State<ReportedDisasters> {
     }
   }
 
+  //disaster state part
+  bool isResponded = false;
+  void toggleState() {
+    setState(() {
+      isResponded = !isResponded;
+    });
+  }
+
 //ui part
   @override
   Widget build(BuildContext context) {
@@ -156,6 +164,21 @@ class _ReportedDisastersState extends State<ReportedDisasters> {
                                       ],
                                     ),
                                   ),
+                                   Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Text(
+                                          'DESCRIPTION:',
+                                          style: TextStyle(color: Colors.blue),
+                                        ),
+                                        SizedBox(width: 20),
+                                        Expanded(
+                                          child: Text(description.toString()),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Row(
@@ -192,6 +215,7 @@ class _ReportedDisastersState extends State<ReportedDisasters> {
                                       ],
                                     ),
                                   ),
+                                  
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Row(
@@ -203,14 +227,24 @@ class _ReportedDisastersState extends State<ReportedDisasters> {
                                         Text("STATUS:",
                                             style:
                                                 TextStyle(color: Colors.blue)),
-                                        Text("RESPONDED",
-                                            style:
-                                                TextStyle(color: Colors.green)),
-                                        Container(
-                                          color: Colors.green,
-                                          height: 20,
-                                          width: 20,
+                                        RaisedButton(
+                                          child: isResponded
+                                              ? Text("RESPONDED",
+                                                  style: TextStyle(
+                                                    color: Colors.green,
+                                                  ))
+                                              : Text(
+                                                  "PENDING",
+                                                  style: TextStyle(
+                                                      color: Colors.red),
+                                                ),
+                                          onPressed: () {
+                                            toggleState();
+                                          },
                                         ),
+                                        // Text("RESPONDED",
+                                        //     style:
+                                        //         TextStyle(color: Colors.green)),
                                       ],
                                     ),
                                   ),
